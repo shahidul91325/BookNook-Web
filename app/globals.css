@@ -1,1 +1,85 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7f4ec;
+  --foreground: #252f3d;
+  --surface: #fffdf7;
+  --surface-hover: #eee9dd;
+  --card: #ffffff;
+  --card-foreground: #252f3d;
+  --primary: #315c85;
+  --primary-hover: #264a6d;
+  --primary-foreground: #ffffff;
+  --accent: #b7a27a;
+  --accent-foreground: #ffffff;
+  --muted: #eee9dd;
+  --muted-foreground: #747b84;
+  --border: #e5dfd2;
+  --ring: #315c85;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: #050d1b;
+  --foreground: #f1f6ff;
+  --surface: #0b1930;
+  --surface-hover: #102442;
+  --card: #102442;
+  --card-foreground: #f1f6ff;
+  --primary: #268bff;
+  --primary-hover: #1b73dd;
+  --primary-foreground: #ffffff;
+  --accent: #60b5ff;
+  --accent-foreground: #050d1b;
+  --muted: #0b1930;
+  --muted-foreground: #8fa2c0;
+  --border: #1b3558;
+  --ring: #268bff;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-custom: var(--radius);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
