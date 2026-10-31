@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,7 +8,6 @@ import {
   Loader2,
   AlertCircle,
   ArrowLeft,
-  Image as ImageIcon,
   LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
 import type { BookCategory, CreateBookInput } from "@/types";
 
 const CATEGORIES: BookCategory[] = [
@@ -66,7 +65,6 @@ export function AddBookForm() {
   const [errors, setErrors] = React.useState<FormErrors>({});
   const [touched, setTouched] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [previewError, setPreviewError] = React.useState(false);
 
   // Mark field as touched on blur
   const handleBlur = (field: string) => {
@@ -100,9 +98,9 @@ export function AddBookForm() {
 
     if (field === "image") {
       if (!image.trim()) {
-        newErrors.image = "Book cover image URL is required.";
-      } else if (!/^https?:\/\/.+/i.test(image.trim())) {
-        newErrors.image = "Please enter a valid HTTP/HTTPS image URL.";
+        newErrors.image = "Book cover image is required.";
+      } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/")) {
+        newErrors.image = "Please upload an image or enter a valid HTTP/HTTPS URL.";
       } else {
         delete newErrors.image;
       }
@@ -147,9 +145,9 @@ export function AddBookForm() {
     }
 
     if (!image.trim()) {
-      newErrors.image = "Book cover image URL is required.";
-    } else if (!/^https?:\/\/.+/i.test(image.trim())) {
-      newErrors.image = "Please enter a valid image URL.";
+      newErrors.image = "Book cover image is required.";
+    } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/")) {
+      newErrors.image = "Please upload an image or enter a valid HTTP/HTTPS URL.";
     }
 
     const q = parseInt(quantity, 10);
@@ -383,53 +381,24 @@ export function AddBookForm() {
               </div>
             </div>
 
-            {/* Row 3: Book Image URL & Live Thumbnail Preview */}
+            {/* Row 3: Book Cover Image Upload & Preview */}
             <div>
               <label className="text-xs font-semibold text-foreground block mb-1.5">
-                Book Cover Image URL <span className="text-red-500">*</span>
+                Book Cover Image <span className="text-red-500">*</span>
               </label>
-              <div className="flex flex-col sm:flex-row gap-4 items-start">
-                <div className="flex-1 w-full">
-                  <Input
-                    type="url"
-                    placeholder="https://images.unsplash.com/photo-... or https://i.ibb.co/..."
-                    value={image}
-                    onChange={(e) => {
-                      setImage(e.target.value);
-                      setPreviewError(false);
-                    }}
-                    onBlur={() => handleBlur("image")}
-                    className={errors.image && touched.image ? "border-red-500 focus-visible:ring-red-500" : ""}
-                  />
-                  {errors.image && touched.image && (
-                    <p className="flex items-center gap-1 text-[11px] text-red-500 mt-1 font-medium">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      <span>{errors.image}</span>
-                    </p>
-                  )}
-                  <p className="text-[11px] text-muted-foreground mt-1.5">
-                    Direct image link (.jpg, .png, .webp).
-                  </p>
-                </div>
-
-                {/* Cover Preview Box */}
-                <div className="relative aspect-[3/4] w-20 sm:w-24 shrink-0 rounded-xl overflow-hidden bg-surface border border-border/70 flex items-center justify-center text-muted-foreground shadow-sm">
-                  {image && !previewError ? (
-                    <Image
-                      src={image}
-                      alt="Cover preview"
-                      fill
-                      className="object-cover"
-                      onError={() => setPreviewError(true)}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                      <ImageIcon className="h-6 w-6 text-muted-foreground/40 mb-1" />
-                      <span className="text-[9px] text-muted-foreground">Preview</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ImageUpload
+                value={image}
+                onChange={(url) => {
+                  setImage(url);
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.image;
+                    return next;
+                  });
+                }}
+                disabled={isSubmitting}
+                error={touched.image ? errors.image : undefined}
+              />
             </div>
 
             {/* Row 4: Short Description */}

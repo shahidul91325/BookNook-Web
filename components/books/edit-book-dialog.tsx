@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import {
   Edit,
   Loader2,
   AlertCircle,
-  Image as ImageIcon,
   Check,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   Dialog,
   DialogContent,
@@ -69,7 +68,6 @@ function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerP
   const [errors, setErrors] = React.useState<FormErrors>({});
   const [touched, setTouched] = React.useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [previewError, setPreviewError] = React.useState(false);
 
   const bookId = book.id || book._id || "";
 
@@ -98,9 +96,9 @@ function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerP
 
     if (field === "image") {
       if (!image.trim()) {
-        newErrors.image = "Image URL is required.";
-      } else if (!/^https?:\/\/.+/i.test(image.trim())) {
-        newErrors.image = "Enter a valid HTTP/HTTPS URL.";
+        newErrors.image = "Book cover image is required.";
+      } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/")) {
+        newErrors.image = "Please upload an image or enter a valid URL.";
       } else {
         delete newErrors.image;
       }
@@ -143,8 +141,8 @@ function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerP
     if (!author.trim() || author.trim().length < 2) {
       newErrors.author = "Author must be at least 2 characters.";
     }
-    if (!image.trim() || !/^https?:\/\/.+/i.test(image.trim())) {
-      newErrors.image = "Valid image URL is required.";
+    if (!image.trim() || (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/"))) {
+      newErrors.image = "Valid image or uploaded cover is required.";
     }
     const q = parseInt(quantity, 10);
     if (isNaN(q) || q < 0) {
@@ -275,45 +273,24 @@ function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerP
         </div>
       </div>
 
-      {/* Row 3: Image URL & Preview */}
+      {/* Row 3: Cover Image Upload & Preview */}
       <div>
         <label className="text-xs font-semibold text-foreground block mb-1">
-          Cover Image URL *
+          Cover Image *
         </label>
-        <div className="flex gap-3 items-start">
-          <div className="flex-1">
-            <Input
-              type="url"
-              value={image}
-              onChange={(e) => {
-                setImage(e.target.value);
-                setPreviewError(false);
-              }}
-              onBlur={() => handleBlur("image")}
-              className={errors.image && touched.image ? "border-red-500 text-xs" : "text-xs"}
-            />
-            {errors.image && touched.image && (
-              <p className="flex items-center gap-1 text-[10px] text-red-500 mt-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.image}
-              </p>
-            )}
-          </div>
-
-          <div className="relative aspect-[3/4] w-14 rounded-lg overflow-hidden bg-surface border border-border shrink-0 flex items-center justify-center">
-            {image && !previewError ? (
-              <Image
-                src={image}
-                alt="Preview"
-                fill
-                className="object-cover"
-                onError={() => setPreviewError(true)}
-              />
-            ) : (
-              <ImageIcon className="h-5 w-5 text-muted-foreground/40" />
-            )}
-          </div>
-        </div>
+        <ImageUpload
+          value={image}
+          onChange={(url) => {
+            setImage(url);
+            setErrors((prev) => {
+              const next = { ...prev };
+              delete next.image;
+              return next;
+            });
+          }}
+          disabled={isSubmitting}
+          error={touched.image ? errors.image : undefined}
+        />
       </div>
 
       {/* Row 4: Short Description */}
