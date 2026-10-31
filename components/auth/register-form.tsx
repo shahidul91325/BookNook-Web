@@ -25,12 +25,16 @@ export function RegisterForm() {
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
 
-  // Extract and sanitize redirect URL
+  // Extract and sanitize redirect URL (defaults strictly to homepage /)
   const rawRedirect = searchParams.get("redirect") || searchParams.get("redirectTo");
   const redirectUrl =
-    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+    rawRedirect &&
+    rawRedirect.startsWith("/") &&
+    !rawRedirect.startsWith("//") &&
+    rawRedirect !== "/login" &&
+    rawRedirect !== "/register"
       ? rawRedirect
-      : "/books";
+      : "/";
 
   // Form states
   const [name, setName] = React.useState("");
@@ -54,7 +58,7 @@ export function RegisterForm() {
   // Auto-redirect if already logged in
   React.useEffect(() => {
     if (isAuthenticated) {
-      toast.info("You are already signed in!");
+      toast.info("You are already signed in!", { id: "auth-status" });
       router.replace(redirectUrl);
     }
   }, [isAuthenticated, redirectUrl, router]);

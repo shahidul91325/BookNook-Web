@@ -48,7 +48,16 @@ export default function RootLayout({
             <main className="flex-1 flex flex-col">{children}</main>
             <Footer />
           </div>
-          <Toaster richColors position="top-right" />
+          <Toaster
+            richColors
+            closeButton
+            expand={false}
+            visibleToasts={1}
+            position="top-center"
+            toastOptions={{
+              className: "shadow-2xl border border-border/80 font-medium",
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

@@ -43,7 +43,7 @@ export function AuthLink({
 
     if (isAuthenticated && isAuthRoute) {
       e.preventDefault();
-      toast.info("You are already signed in!");
+      toast.info("You are already signed in!", { id: "auth-status" });
     }
   };
 
@@ -66,7 +66,7 @@ export function useAuthAction() {
   ): boolean => {
     if (isAuthenticated) {
       if (e) e.preventDefault();
-      toast.info("You are already signed in!");
+      toast.info("You are already signed in!", { id: "auth-status" });
       return false;
     }
     if (actionCallback) actionCallback();

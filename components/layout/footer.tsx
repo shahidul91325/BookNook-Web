@@ -1,6 +1,6 @@
-import React from "react";
-import Link from "next/link";
-import { BookOpen, Mail, Phone, MapPin } from "lucide-react";
+import React from 'react';
+import Link from 'next/link';
+import { BookOpen, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -22,54 +22,37 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              Discover, borrow, and enjoy your favorite books. A community-driven
-              library empowering readers to explore endless stories and ideas.
+              Discover, borrow, and enjoy your favorite books. A community-driven library empowering readers to explore
+              endless stories and ideas.
             </p>
           </div>
 
           {/* Quick Navigation Links */}
           <div>
-            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">
-              Quick Links
-            </h4>
+            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">Quick Links</h4>
             <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li>
-                <Link
-                  href="/"
-                  className="hover:text-primary transition-colors inline-block"
-                >
+                <Link href="/" className="hover:text-primary transition-colors inline-block">
                   Home
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/books"
-                  className="hover:text-primary transition-colors inline-block"
-                >
+                <Link href="/books" className="hover:text-primary transition-colors inline-block">
                   All Books
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/add-book"
-                  className="hover:text-primary transition-colors inline-block"
-                >
+                <Link href="/add-book" className="hover:text-primary transition-colors inline-block">
                   Add a Book
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/my-books"
-                  className="hover:text-primary transition-colors inline-block"
-                >
+                <Link href="/my-books" className="hover:text-primary transition-colors inline-block">
                   My Books Dashboard
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/my-borrows"
-                  className="hover:text-primary transition-colors inline-block"
-                >
+                <Link href="/my-borrows" className="hover:text-primary transition-colors inline-block">
                   My Borrowed Books
                 </Link>
               </li>
@@ -78,22 +61,17 @@ export function Footer() {
 
           {/* Contact Details */}
           <div>
-            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">
-              Contact Us
-            </h4>
+            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">Contact Us</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2.5">
                 <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <a
-                  href="mailto:support@booknook.com"
-                  className="hover:text-primary transition-colors truncate"
-                >
-                  support@booknook.com
+                <a href="mailto:support@booknook.com" className="hover:text-primary transition-colors truncate">
+                  mdshahidulislam91325@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-primary shrink-0" />
-                <span>+880 1234 567890</span>
+                <span>+880 1936 151282</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <MapPin className="h-4 w-4 text-primary shrink-0" />
@@ -104,9 +82,7 @@ export function Footer() {
 
           {/* Social Links & Community */}
           <div>
-            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">
-              Connect With Us
-            </h4>
+            <h4 className="text-xs font-semibold tracking-wider text-foreground uppercase mb-4">Connect With Us</h4>
             <p className="text-sm text-muted-foreground mb-4">
               Join our active community of readers, authors, and knowledge seekers.
             </p>
