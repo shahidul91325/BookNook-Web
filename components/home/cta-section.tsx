@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthLink } from "@/components/auth/auth-link";
 
 export function CtaSection() {
   return (
@@ -54,7 +55,7 @@ export function CtaSection() {
               size="lg"
               className="w-full sm:w-auto px-7 py-3 text-sm font-semibold border-border hover:border-primary/50 hover:bg-surface-hover transition-all"
             >
-              <Link href="/register">Create Free Account</Link>
+              <AuthLink href="/register">Create Free Account</AuthLink>
             </Button>
           </div>
         </div>

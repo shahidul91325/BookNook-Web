@@ -20,6 +20,7 @@ import {
   Loader2,
   Edit,
   Trash2,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { bookService } from "@/services/book-service";
@@ -231,11 +232,17 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
           <p className="text-sm text-muted-foreground mt-2 mb-6">
             {errorMessage || "The requested book could not be found in our library collection."}
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <Button asChild variant="default" size="sm">
               <Link href="/books" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to All Books
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/" className="gap-2">
+                <Home className="h-4 w-4" />
+                Home
               </Link>
             </Button>
             <Button

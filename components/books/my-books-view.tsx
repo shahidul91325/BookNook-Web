@@ -19,6 +19,7 @@ import { bookService } from "@/services/book-service";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AuthLink } from "@/components/auth/auth-link";
 import {
   Table,
   TableHeader,
@@ -130,10 +131,10 @@ export function MyBooksView() {
           </p>
           <div className="flex justify-center gap-3">
             <Button asChild variant="default" size="sm">
-              <Link href="/login?redirect=/my-books" className="gap-2">
+              <AuthLink href="/login?redirect=/my-books" className="gap-2">
                 <LogIn className="h-4 w-4" />
                 Sign In to Continue
-              </Link>
+              </AuthLink>
             </Button>
             <Button asChild variant="outline" size="sm">
               <Link href="/books">Explore Catalog</Link>

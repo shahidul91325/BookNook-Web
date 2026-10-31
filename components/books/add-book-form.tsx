@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { AuthLink } from "@/components/auth/auth-link";
 import type { BookCategory, CreateBookInput } from "@/types";
 
 const CATEGORIES: BookCategory[] = [
@@ -247,10 +248,10 @@ export function AddBookForm() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button asChild variant="default" size="sm">
-              <Link href="/login?redirect=/add-book" className="gap-2">
+              <AuthLink href="/login?redirect=/add-book" className="gap-2">
                 <LogIn className="h-4 w-4" />
                 Sign In to Continue
-              </Link>
+              </AuthLink>
             </Button>
             <Button asChild variant="outline" size="sm">
               <Link href="/books">Browse Library</Link>

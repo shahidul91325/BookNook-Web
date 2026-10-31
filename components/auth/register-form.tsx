@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -10,7 +9,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Image as ImageIcon,
   Loader2,
   ArrowRight,
 } from "lucide-react";
@@ -18,7 +16,9 @@ import { authClient } from "@/lib/auth/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { GoogleButton } from "@/components/auth/google-button";
+import { AuthLink } from "@/components/auth/auth-link";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -54,6 +54,7 @@ export function RegisterForm() {
   // Auto-redirect if already logged in
   React.useEffect(() => {
     if (isAuthenticated) {
+      toast.info("You are already signed in!");
       router.replace(redirectUrl);
     }
   }, [isAuthenticated, redirectUrl, router]);
@@ -92,8 +93,12 @@ export function RegisterForm() {
       newErrors.confirmPassword = "Passwords do not match.";
     }
 
-    if (image.trim() && !/^https?:\/\//i.test(image.trim())) {
-      newErrors.image = "Avatar image must be a valid http or https URL.";
+    if (
+      image.trim() &&
+      !/^https?:\/\//i.test(image.trim()) &&
+      !image.trim().startsWith("/uploads/")
+    ) {
+      newErrors.image = "Please upload an avatar image or enter a valid URL.";
     }
 
     setErrors(newErrors);
@@ -232,37 +237,24 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Avatar Image URL Field (Optional) */}
+        {/* Avatar Profile Image Picker */}
         <div className="space-y-1">
           <label
-            htmlFor="register-image"
+            htmlFor="avatar-file-input"
             className="block text-xs font-semibold text-foreground flex items-center justify-between"
           >
-            <span>Avatar Photo URL</span>
+            <span>Profile Photo / Avatar</span>
             <span className="text-[10px] text-muted-foreground font-normal">Optional</span>
           </label>
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-              <ImageIcon className="h-4 w-4" />
-            </div>
-            <Input
-              id="register-image"
-              type="url"
-              value={image}
-              onChange={(e) => {
-                setImage(e.target.value);
-                if (errors.image) setErrors((prev) => ({ ...prev, image: undefined }));
-              }}
-              placeholder="https://images.unsplash.com/photo-..."
-              disabled={isSubmitting}
-              className={`pl-9.5 text-xs h-9.5 ${
-                errors.image ? "border-destructive focus-visible:ring-destructive" : ""
-              }`}
-            />
-          </div>
-          {errors.image && (
-            <p className="text-[11px] text-destructive">{errors.image}</p>
-          )}
+          <AvatarUpload
+            value={image}
+            onChange={(url) => {
+              setImage(url);
+              if (errors.image) setErrors((prev) => ({ ...prev, image: undefined }));
+            }}
+            disabled={isSubmitting}
+            error={errors.image}
+          />
         </div>
 
         {/* Password Field */}
@@ -387,12 +379,12 @@ export function RegisterForm() {
       {/* Footer Link to Login */}
       <div className="pt-2 text-center text-xs text-muted-foreground">
         Already have a BookNook account?{" "}
-        <Link
+        <AuthLink
           href={`/login${rawRedirect ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`}
           className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors"
         >
           Sign In
-        </Link>
+        </AuthLink>
       </div>
     </div>
   );

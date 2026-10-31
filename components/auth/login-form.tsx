@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
@@ -10,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GoogleButton } from "@/components/auth/google-button";
+import { AuthLink } from "@/components/auth/auth-link";
 
 export function LoginForm() {
   const router = useRouter();
@@ -34,6 +34,7 @@ export function LoginForm() {
   // Auto-redirect if already logged in
   React.useEffect(() => {
     if (isAuthenticated) {
+      toast.info("You are already signed in!");
       router.replace(redirectUrl);
     }
   }, [isAuthenticated, redirectUrl, router]);
@@ -227,12 +228,12 @@ export function LoginForm() {
       {/* Footer Link to Register */}
       <div className="pt-2 text-center text-xs text-muted-foreground">
         Don&apos;t have an account yet?{" "}
-        <Link
+        <AuthLink
           href={`/register${rawRedirect ? `?redirect=${encodeURIComponent(rawRedirect)}` : ""}`}
           className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors"
         >
           Create an account
-        </Link>
+        </AuthLink>
       </div>
     </div>
   );

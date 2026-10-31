@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AuthLink } from "@/components/auth/auth-link";
 
 interface SlideData {
   tag: string;
@@ -179,9 +180,9 @@ export function HeroSection() {
                 size="lg"
                 className="w-full sm:w-auto px-6 py-3 font-semibold text-sm border-border/90 hover:border-primary/50 hover:bg-surface-hover transition-all duration-300"
               >
-                <Link href={slide.secondaryCtaHref}>
+                <AuthLink href={slide.secondaryCtaHref}>
                   {slide.secondaryCtaText}
-                </Link>
+                </AuthLink>
               </Button>
             </div>
 

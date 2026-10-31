@@ -17,6 +17,7 @@ import {
   Search,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthLink } from "@/components/auth/auth-link";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
@@ -301,18 +302,18 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Link
+              <AuthLink
                 href="/login"
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
               >
                 Sign In
-              </Link>
-              <Link
+              </AuthLink>
+              <AuthLink
                 href="/register"
                 className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors"
               >
                 Register
-              </Link>
+              </AuthLink>
             </div>
           )}
         </div>
@@ -461,20 +462,20 @@ export function Navbar() {
               </>
             ) : (
               <div className="pt-3 border-t border-border/60 flex flex-col gap-2">
-                <Link
+                <AuthLink
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full py-2.5 text-center rounded-lg text-sm font-semibold border border-border/80 bg-surface/70 hover:bg-surface-hover text-foreground transition-colors"
                 >
                   Sign In
-                </Link>
-                <Link
+                </AuthLink>
+                <AuthLink
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full py-2.5 text-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors"
                 >
                   Register
-                </Link>
+                </AuthLink>
               </div>
             )}
           </nav>
