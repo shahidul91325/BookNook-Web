@@ -51,7 +51,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/books/add"
+                  href="/add-book"
                   className="hover:text-primary transition-colors inline-block"
                 >
                   Add a Book

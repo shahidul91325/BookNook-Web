@@ -58,6 +58,9 @@ export function Navbar() {
     if (href === "/books") {
       return pathname === "/books" || (pathname.startsWith("/books/") && pathname !== "/books/add");
     }
+    if (href === "/add-book") {
+      return pathname === "/add-book" || pathname === "/books/add";
+    }
     return pathname === href;
   };
 
@@ -67,7 +70,7 @@ export function Navbar() {
   ];
 
   const protectedLinks = [
-    { name: "Add Book", href: "/books/add", icon: PlusCircle },
+    { name: "Add Book", href: "/add-book", icon: PlusCircle },
     { name: "My Books", href: "/my-books", icon: Library },
     { name: "My Borrows", href: "/my-borrows", icon: Bookmark },
   ];

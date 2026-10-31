@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest, ApiError } from "@/lib/api/client";
 import type {
   Book,
   BookFilterParams,
@@ -63,10 +63,20 @@ export const bookService = {
    * Add a new book to the library.
    */
   async createBook(data: CreateBookInput): Promise<Book> {
-    return apiRequest<Book>("/api/books", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    try {
+      return await apiRequest<Book>("/api/books", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await apiRequest<Book>("/api/book", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+      }
+      throw err;
+    }
   },
 
   /**
