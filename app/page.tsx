@@ -1,4 +1,4 @@
-import { HeroSection } from "@/components/home/hero-section";
+import HeroSlider from "@/components/home/hero-slider";
 import { FeaturesSection } from "@/components/home/features-section";
 import { FeaturedBooksSection } from "@/components/home/featured-books-section";
 import { CategoriesSection } from "@/components/home/categories-section";
@@ -10,7 +10,7 @@ import { CtaSection } from "@/components/home/cta-section";
 export default function Home() {
   return (
     <div className="flex flex-col">
-      <HeroSection />
+      <HeroSlider />
       <FeaturesSection />
       <FeaturedBooksSection />
       <CategoriesSection />
