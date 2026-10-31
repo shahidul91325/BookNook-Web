@@ -52,6 +52,35 @@ export const bookService = {
   },
 
   /**
+   * Fetch books belonging to the currently logged in user.
+   * Follows backend session authentication without relying on client IDs.
+   */
+  async getMyBooks(userEmail?: string): Promise<Book[]> {
+    try {
+      return await apiRequest<Book[]>("/api/my-books");
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
+        try {
+          return await apiRequest<Book[]>("/api/books/my");
+        } catch (err2: unknown) {
+          if (err2 instanceof ApiError && err2.status === 404) {
+            try {
+              return await apiRequest<Book[]>("/api/books/user");
+            } catch (err3: unknown) {
+              if (err3 instanceof ApiError && err3.status === 404 && userEmail) {
+                return await apiRequest<Book[]>(`/api/books/user/${encodeURIComponent(userEmail)}`);
+              }
+              throw err3;
+            }
+          }
+          throw err2;
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
    * Fetch books added by a specific user.
    */
   async getBooksByUser(email: string): Promise<Book[]> {

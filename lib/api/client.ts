@@ -26,11 +26,16 @@ export function getApiBaseUrl(): string {
 export function getStoredAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return (
+    const fromStorage =
       localStorage.getItem("booknook_token") ||
-      localStorage.getItem("better-auth.session_token") ||
-      null
-    );
+      localStorage.getItem("better-auth.session_token");
+    if (fromStorage) return fromStorage;
+
+    // Check cookies for better-auth.session_token
+    const match = document.cookie.match(/(?:^|;\s*)better-auth\.session_token=([^;]+)/);
+    if (match) return decodeURIComponent(match[1]);
+
+    return null;
   } catch {
     return null;
   }
@@ -115,6 +120,7 @@ export async function apiRequest<T>(
     response = await fetch(url, {
       ...init,
       headers,
+      credentials: init?.credentials || "include",
     });
   } catch (error) {
     const message =
