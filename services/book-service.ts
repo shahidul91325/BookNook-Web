@@ -83,18 +83,37 @@ export const bookService = {
    * Update an existing book.
    */
   async updateBook(id: string, data: UpdateBookInput): Promise<Book> {
-    return apiRequest<Book>(`/api/books/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    try {
+      return await apiRequest<Book>(`/api/books/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await apiRequest<Book>(`/api/book/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+      }
+      throw err;
+    }
   },
 
   /**
    * Delete a book by its identifier.
    */
   async deleteBook(id: string): Promise<{ success: boolean; message?: string }> {
-    return apiRequest<{ success: boolean; message?: string }>(`/api/books/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      return await apiRequest<{ success: boolean; message?: string }>(`/api/books/${id}`, {
+        method: "DELETE",
+      });
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await apiRequest<{ success: boolean; message?: string }>(`/api/book/${id}`, {
+          method: "DELETE",
+        });
+      }
+      throw err;
+    }
   },
 };

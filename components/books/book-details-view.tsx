@@ -18,11 +18,15 @@ import {
   LogIn,
   RefreshCw,
   Loader2,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { bookService } from "@/services/book-service";
 import { borrowService } from "@/services/borrow-service";
 import { useAuth } from "@/hooks/use-auth";
+import { EditBookDialog } from "@/components/books/edit-book-dialog";
+import { DeleteBookDialog } from "@/components/books/delete-book-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -52,6 +56,10 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
   const [isBorrowDialogOpen, setIsBorrowDialogOpen] = React.useState(false);
   const [returnDate, setReturnDate] = React.useState("");
   const [isBorrowing, setIsBorrowing] = React.useState(false);
+
+  // Edit and Delete Dialog States
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   // Calculate default return date (e.g. 7 days from now)
   const defaultReturnDate = React.useMemo(() => {
@@ -243,6 +251,11 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
 
   const isAvailable = book.quantity !== undefined ? book.quantity > 0 : true;
   const copiesCount = book.quantity !== undefined ? book.quantity : 0;
+  const isOwner = Boolean(
+    user?.email &&
+      book?.userEmail &&
+      user.email.toLowerCase() === book.userEmail.toLowerCase()
+  );
 
   return (
     <div className="py-8 sm:py-12 bg-background min-h-screen transition-colors">
@@ -368,8 +381,36 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
                 )}
               </div>
 
-              {/* Primary Borrow CTA */}
-              <div className="pt-6 border-t border-border/60">
+              {/* Contributor Actions & Primary Borrow CTA */}
+              <div className="pt-6 border-t border-border/60 space-y-4">
+                {isOwner && (
+                  <div className="flex flex-wrap items-center gap-2.5 p-3.5 rounded-2xl bg-surface/80 border border-border/80 shadow-sm">
+                    <span className="text-xs font-semibold text-muted-foreground mr-1">
+                      Contributor Actions:
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditDialogOpen(true)}
+                      className="gap-1.5 text-xs font-semibold"
+                    >
+                      <Edit className="h-3.5 w-3.5 text-primary" />
+                      Edit Book
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/30"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Book
+                    </Button>
+                  </div>
+                )}
+
                 {isAuthenticated ? (
                   <Button
                     onClick={handleOpenBorrowDialog}
@@ -511,6 +552,22 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Book Modal Dialog */}
+      <EditBookDialog
+        book={book}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onUpdated={(updated) => setBook(updated)}
+      />
+
+      {/* Delete Book Confirmation Modal Dialog */}
+      <DeleteBookDialog
+        book={book}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onDeleted={() => router.push("/books")}
+      />
     </div>
   );
 }
