@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest, ApiError } from "@/lib/api/client";
 import type { BorrowRecord, CreateBorrowInput } from "@/types";
 
 /**
@@ -9,10 +9,20 @@ export const borrowService = {
    * Borrow a book for a user.
    */
   async borrowBook(data: CreateBorrowInput): Promise<BorrowRecord> {
-    return apiRequest<BorrowRecord>("/api/borrows", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    try {
+      return await apiRequest<BorrowRecord>("/api/borrows", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await apiRequest<BorrowRecord>("/api/borrow", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+      }
+      throw err;
+    }
   },
 
   /**

@@ -17,6 +17,7 @@ export interface Book {
   category: BookCategory | string;
   image: string;
   quantity: number;
+  isbn?: string;
   rating?: number;
   reviewsCount?: number;
   description: string;
