@@ -394,9 +394,9 @@ export function Navbar() {
             })}
 
             {isLoading ? (
-              <div className="py-3 px-3.5 space-y-2 animate-pulse">
-                <div className="h-4 w-28 bg-surface rounded" />
-                <div className="h-9 w-full bg-surface rounded-lg" />
+              <div className="pt-3 border-t border-border/60 space-y-2 animate-pulse">
+                <div className="h-10 w-full rounded-lg bg-surface" />
+                <div className="h-10 w-full rounded-lg bg-surface/70" />
               </div>
             ) : isAuthenticated ? (
               <>

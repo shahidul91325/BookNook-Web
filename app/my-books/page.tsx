@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { MyBooksView } from "@/components/books/my-books-view";
+import { TablePageSkeleton } from "@/components/books/book-table-skeleton";
 
 export const metadata: Metadata = {
   title: "My Added Books | BookNook",
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function MyBooksPage() {
-  return <MyBooksView />;
+  return (
+    <Suspense fallback={<TablePageSkeleton type="books" />}>
+      <MyBooksView />
+    </Suspense>
+  );
 }

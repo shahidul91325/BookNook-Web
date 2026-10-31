@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { MyBorrowsView } from "@/components/books/my-borrows-view";
+import { TablePageSkeleton } from "@/components/books/book-table-skeleton";
 
 export const metadata: Metadata = {
   title: "My Borrowed Books | BookNook",
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function MyBorrowsPage() {
-  return <MyBorrowsView />;
+  return (
+    <Suspense fallback={<TablePageSkeleton type="borrows" />}>
+      <MyBorrowsView />
+    </Suspense>
+  );
 }

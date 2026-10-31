@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { AddBookForm } from "@/components/books/add-book-form";
+import { AddBookForm, AddBookFormSkeleton } from "@/components/books/add-book-form";
 
 export const metadata: Metadata = {
   title: "Add a New Book | BookNook",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function BooksAddPage() {
-  return <AddBookForm />;
+  return (
+    <Suspense fallback={<AddBookFormSkeleton />}>
+      <AddBookForm />
+    </Suspense>
+  );
 }

@@ -31,6 +31,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { BookTableSkeleton } from "@/components/books/book-table-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -267,13 +268,20 @@ export function MyBorrowsView() {
     }
   };
 
-  // Auth Loading Skeleton
+  // Auth Loading Skeleton (matches page layout to prevent layout shift)
   if (isAuthLoading) {
     return (
-      <div className="py-12 bg-background min-h-[600px] flex items-center justify-center">
-        <div className="space-y-4 text-center animate-pulse">
-          <div className="h-10 w-10 bg-surface rounded-full mx-auto" />
-          <div className="h-4 w-40 bg-surface rounded mx-auto" />
+      <div className="py-8 sm:py-12 bg-background min-h-screen">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 animate-pulse">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80">
+            <div className="space-y-2">
+              <div className="h-4 w-28 bg-surface rounded" />
+              <div className="h-8 w-56 bg-surface rounded" />
+              <div className="h-3.5 w-80 max-w-full bg-surface/70 rounded" />
+            </div>
+            <div className="h-9 w-36 bg-surface rounded-lg" />
+          </div>
+          <BookTableSkeleton type="borrows" rows={4} />
         </div>
       </div>
     );
@@ -343,16 +351,7 @@ export function MyBorrowsView() {
         </div>
 
         {/* Loading Skeleton */}
-        {isLoading && (
-          <div className="rounded-2xl border border-border/80 bg-card p-6 space-y-4 animate-pulse">
-            <div className="h-6 w-48 bg-surface rounded" />
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-16 w-full bg-surface/70 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        )}
+        {isLoading && <BookTableSkeleton type="borrows" rows={4} />}
 
         {/* Error State */}
         {!isLoading && errorMessage && (

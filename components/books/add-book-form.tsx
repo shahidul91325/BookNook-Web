@@ -42,6 +42,35 @@ interface FormErrors {
   description?: string;
 }
 
+export function AddBookFormSkeleton() {
+  return (
+    <div className="py-8 sm:py-12 bg-background min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div className="h-4 w-32 bg-surface rounded mb-6 animate-pulse" />
+        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-10 shadow-xl space-y-6 animate-pulse">
+          <div className="flex items-center gap-3 pb-6 border-b border-border/60">
+            <div className="h-12 w-12 rounded-2xl bg-surface" />
+            <div className="space-y-2">
+              <div className="h-6 w-48 bg-surface rounded" />
+              <div className="h-3.5 w-72 bg-surface/70 rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="h-10 bg-surface rounded-xl" />
+            <div className="h-10 bg-surface rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="h-10 bg-surface rounded-xl" />
+            <div className="h-10 bg-surface rounded-xl" />
+          </div>
+          <div className="h-28 bg-surface rounded-xl" />
+          <div className="h-11 w-40 bg-surface rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AddBookForm() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -222,16 +251,9 @@ export function AddBookForm() {
     }
   };
 
-  // Auth Loading Skeleton
+  // Auth Loading Skeleton (matches form layout to prevent layout shift)
   if (isAuthLoading) {
-    return (
-      <div className="py-12 bg-background min-h-[600px] flex items-center justify-center">
-        <div className="space-y-4 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
+    return <AddBookFormSkeleton />;
   }
 
   // Unauthenticated Guard Screen

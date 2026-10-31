@@ -28,6 +28,7 @@ import { borrowService } from "@/services/borrow-service";
 import { useAuth } from "@/hooks/use-auth";
 import { EditBookDialog } from "@/components/books/edit-book-dialog";
 import { DeleteBookDialog } from "@/components/books/delete-book-dialog";
+import { BookDetailsSkeleton } from "@/components/books/book-details-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -199,25 +200,7 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
 
   // Loading Skeleton View
   if (isAuthLoading || !isAuthenticated || isLoading) {
-    return (
-      <div className="py-8 sm:py-12 bg-background min-h-screen">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="h-4 w-32 bg-surface rounded mb-8 animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
-            <div className="md:col-span-5 lg:col-span-4">
-              <div className="aspect-[3/4] w-full rounded-2xl bg-surface animate-pulse" />
-            </div>
-            <div className="md:col-span-7 lg:col-span-8 space-y-4">
-              <div className="h-6 w-24 bg-surface rounded animate-pulse" />
-              <div className="h-10 w-3/4 bg-surface rounded animate-pulse" />
-              <div className="h-4 w-40 bg-surface/70 rounded animate-pulse" />
-              <div className="h-24 w-full bg-surface/60 rounded animate-pulse" />
-              <div className="h-12 w-48 bg-surface rounded-xl animate-pulse mt-8" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <BookDetailsSkeleton />;
   }
 
   // Error / Not Found View
