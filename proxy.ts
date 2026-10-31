@@ -33,7 +33,7 @@ function isProtectedPath(pathname: string): boolean {
 }
 
 /**
- * Checks whether an active session exists in request cookies.
+ * Checks whether an active Better Auth session exists in request cookies.
  */
 function hasSessionCookie(request: NextRequest): boolean {
   try {
@@ -45,17 +45,13 @@ function hasSessionCookie(request: NextRequest): boolean {
     // Fall back to direct cookie inspection if getSessionCookie encounters an unexpected header shape
   }
 
-  const fallbackCookieNames = [
+  const sessionCookieNames = [
     "better-auth.session_token",
     "__Secure-better-auth.session_token",
     "better-auth_session_token",
-    "token",
-    "auth_token",
-    "session",
-    "user_session",
   ];
 
-  return fallbackCookieNames.some((name) => {
+  return sessionCookieNames.some((name) => {
     const val = request.cookies.get(name)?.value;
     return Boolean(val && val.trim() && val !== "undefined" && val !== "null");
   });
@@ -68,25 +64,7 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isAuthenticated = hasSessionCookie(request);
 
-  // 1. Redirect authenticated users away from /login and /register
-  if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
-    const rawRedirect =
-      request.nextUrl.searchParams.get("redirect") ||
-      request.nextUrl.searchParams.get("redirectTo");
-
-    const destination =
-      rawRedirect &&
-      rawRedirect.startsWith("/") &&
-      !rawRedirect.startsWith("//") &&
-      rawRedirect !== "/login" &&
-      rawRedirect !== "/register"
-        ? rawRedirect
-        : "/books";
-
-    return NextResponse.redirect(new URL(destination, request.url));
-  }
-
-  // 2. Protect authenticated routes: redirect unauthenticated users to /login with return destination
+  // Protect restricted routes: redirect unauthenticated users to /login with return destination
   if (!isAuthenticated && isProtectedPath(pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);
@@ -107,7 +85,5 @@ export const config = {
     "/my-books",
     "/my-borrows/:path*",
     "/my-borrows",
-    "/login",
-    "/register",
   ],
 };

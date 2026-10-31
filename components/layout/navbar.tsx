@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   BookOpen,
@@ -14,18 +14,31 @@ import {
   Bookmark,
   Library,
   ChevronDown,
+  Search,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [userMenuOpen, setUserMenuOpen] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Search input query state synchronized with URL (React 19 render-phase pattern)
+  const urlSearch = searchParams.get("search") || "";
+  const [prevUrlSearch, setPrevUrlSearch] = React.useState(urlSearch);
+  const [searchQuery, setSearchQuery] = React.useState(urlSearch);
+
+  if (urlSearch !== prevUrlSearch) {
+    setPrevUrlSearch(urlSearch);
+    setSearchQuery(urlSearch);
+  }
 
   // Handle Escape key to dismiss open menus
   React.useEffect(() => {
@@ -64,6 +77,24 @@ export function Navbar() {
     return pathname === href;
   };
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setMobileMenuOpen(false);
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      router.push(`/books?search=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.push("/books");
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    if (pathname === "/books") {
+      router.push("/books");
+    }
+  };
+
   const publicLinks = [
     { name: "Home", href: "/" },
     { name: "Books", href: "/books" },
@@ -77,11 +108,11 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/85 backdrop-blur-md transition-colors">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         {/* Brand Logo & Name */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+          className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg shrink-0"
           aria-label="BookNook Home"
         >
           <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all duration-300 group-hover:scale-105 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary">
@@ -94,7 +125,7 @@ export function Navbar() {
 
         {/* Desktop Navigation Links */}
         <nav
-          className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium"
+          className="hidden md:flex items-center space-x-1 lg:space-x-1.5 text-sm font-medium"
           aria-label="Main Navigation"
         >
           {publicLinks.map((link) => {
@@ -104,7 +135,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
                   active
                     ? "text-primary bg-primary/10 font-semibold shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-surface-hover"
@@ -124,7 +155,7 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
                       active
                         ? "text-primary bg-primary/10 font-semibold shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-surface-hover"
@@ -138,8 +169,42 @@ export function Navbar() {
           )}
         </nav>
 
+        {/* Desktop Search Input Form */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="relative hidden md:flex items-center flex-1 max-w-xs lg:max-w-sm mx-2"
+          role="search"
+        >
+          <Search className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search title, author..."
+            className="h-9 w-full rounded-full border border-border/80 bg-surface/80 pl-8.5 pr-14 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+            aria-label="Search books"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-7 p-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          <button
+            type="submit"
+            className="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary-hover transition-colors shadow-xs"
+            aria-label="Execute search"
+          >
+            <Search className="h-3 w-3" />
+          </button>
+        </form>
+
         {/* Right Desktop Actions */}
-        <div className="hidden md:flex items-center space-x-3">
+        <div className="hidden md:flex items-center space-x-2.5 shrink-0">
           <ThemeToggle />
 
           {isLoading ? (
@@ -236,12 +301,18 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button asChild variant="ghost" size="sm" className="text-xs font-semibold">
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button asChild variant="default" size="sm" className="text-xs font-semibold">
-                <Link href="/register">Register</Link>
-              </Button>
+              <Link
+                href="/login"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors"
+              >
+                Register
+              </Link>
             </div>
           )}
         </div>
@@ -268,6 +339,39 @@ export function Navbar() {
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border bg-card/95 backdrop-blur-lg px-4 pt-3 pb-6 animate-in slide-in-from-top-4 duration-200">
+          {/* Mobile Search Form */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="relative mb-3.5 flex items-center"
+            role="search"
+          >
+            <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search books by title or author..."
+              className="h-10 w-full rounded-xl border border-border/80 bg-surface pl-10 pr-20 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              aria-label="Search books on mobile"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-14 p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button
+              type="submit"
+              className="absolute right-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs"
+            >
+              Search
+            </button>
+          </form>
+
           <nav className="flex flex-col space-y-1.5" aria-label="Mobile Navigation">
             {publicLinks.map((link) => {
               const active = isRouteActive(link.href);
@@ -357,16 +461,20 @@ export function Navbar() {
               </>
             ) : (
               <div className="pt-3 border-t border-border/60 flex flex-col gap-2">
-                <Button asChild variant="outline" className="w-full justify-center">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    Sign In
-                  </Link>
-                </Button>
-                <Button asChild variant="default" className="w-full justify-center">
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                    Register
-                  </Link>
-                </Button>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center rounded-lg text-sm font-semibold border border-border/80 bg-surface/70 hover:bg-surface-hover text-foreground transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors"
+                >
+                  Register
+                </Link>
               </div>
             )}
           </nav>
