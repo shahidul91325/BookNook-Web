@@ -318,8 +318,19 @@ export function Navbar() {
                 <div className="my-2 border-t border-border/60" />
 
                 <div className="flex items-center gap-3 px-3.5 py-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                    {user?.name ? user.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
+                  <div className="relative h-8 w-8 rounded-full overflow-hidden bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                    {user?.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name || "User"}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span>
+                        {user?.name ? user.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
+                      </span>
+                    )}
                   </div>
                   <div className="overflow-hidden">
                     <p className="text-xs font-semibold text-foreground truncate">{user?.name || "Member"}</p>

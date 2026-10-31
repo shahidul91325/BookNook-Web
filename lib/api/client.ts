@@ -28,11 +28,14 @@ export function getStoredAuthToken(): string | null {
   try {
     const fromStorage =
       localStorage.getItem("booknook_token") ||
-      localStorage.getItem("better-auth.session_token");
+      localStorage.getItem("better-auth.session_token") ||
+      localStorage.getItem("better-auth_session_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("auth_token");
     if (fromStorage) return fromStorage;
 
-    // Check cookies for better-auth.session_token
-    const match = document.cookie.match(/(?:^|;\s*)better-auth\.session_token=([^;]+)/);
+    // Check cookies for better-auth session tokens
+    const match = document.cookie.match(/(?:^|;\s*)(?:__Secure-)?(?:better-auth\.session_token|token|auth_token)=([^;]+)/);
     if (match) return decodeURIComponent(match[1]);
 
     return null;
