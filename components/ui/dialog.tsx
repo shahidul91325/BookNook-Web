@@ -50,17 +50,38 @@ export function Dialog({ open: controlledOpen, onOpenChange, children }: DialogP
 }
 
 export function DialogTrigger({
-  asChild,
+  asChild = false,
   children,
+  onClick,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }) {
   const { onOpenChange } = useDialog();
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e);
+    onOpenChange(true);
+  };
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(
+      children as React.ReactElement<{
+        onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+      }>,
+      {
+        onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+          (
+            children.props as {
+              onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+            }
+          )?.onClick?.(e);
+          onOpenChange(true);
+        },
+      }
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => onOpenChange(true)}
-      {...props}
-    >
+    <button type="button" onClick={handleClick} {...props}>
       {children}
     </button>
   );

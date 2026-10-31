@@ -3,25 +3,32 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f7f4ec;
-  --foreground: #252f3d;
-  --surface: #fffdf7;
-  --surface-hover: #eee9dd;
+  /* Elegant Cream-based Light Theme */
+  --background: #fbf9f4;
+  --foreground: #141d2b;
+  --surface: #ffffff;
+  --surface-hover: #f3efe6;
   --card: #ffffff;
-  --card-foreground: #252f3d;
-  --primary: #315c85;
-  --primary-hover: #264a6d;
+  --card-foreground: #141d2b;
+  --primary: #1b6fd8;
+  --primary-hover: #1459b0;
   --primary-foreground: #ffffff;
-  --accent: #b7a27a;
+  --accent: #268bff;
   --accent-foreground: #ffffff;
-  --muted: #eee9dd;
-  --muted-foreground: #747b84;
-  --border: #e5dfd2;
-  --ring: #315c85;
+  --muted: #f2ede2;
+  --muted-foreground: #5a6679;
+  --border: #e4ddcf;
+  --ring: #1b6fd8;
   --radius: 0.75rem;
+
+  /* Elevation Shadows */
+  --shadow-subtle: 0 1px 3px 0 rgba(20, 29, 43, 0.05), 0 1px 2px -1px rgba(20, 29, 43, 0.03);
+  --shadow-card: 0 4px 12px -2px rgba(20, 29, 43, 0.06), 0 2px 6px -2px rgba(20, 29, 43, 0.04);
+  --shadow-elevated: 0 12px 24px -4px rgba(20, 29, 43, 0.08), 0 4px 10px -2px rgba(20, 29, 43, 0.04);
 }
 
 .dark {
+  /* Midnight Navy & Electric Blue Dark Theme */
   --background: #050d1b;
   --foreground: #f1f6ff;
   --surface: #0b1930;
@@ -37,6 +44,12 @@
   --muted-foreground: #8fa2c0;
   --border: #1b3558;
   --ring: #268bff;
+  --radius: 0.75rem;
+
+  /* Dark Theme Shadows & Electric Glow */
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(27, 53, 88, 0.5);
+  --shadow-elevated: 0 16px 32px -4px rgba(0, 0, 0, 0.55), 0 0 20px -3px rgba(38, 139, 255, 0.12);
 }
 
 @theme {
@@ -56,19 +69,60 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
   --radius-custom: var(--radius);
+
+  /* Specific BookNook Palette Tokens */
+  --color-midnight-950: #050d1b;
+  --color-midnight-900: #0b1930;
+  --color-midnight-800: #102442;
+  --color-midnight-700: #1b3558;
+  --color-electric-blue: #268bff;
+  --color-electric-sky: #60b5ff;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Electric Glow utilities */
+.glow-electric {
+  box-shadow: 0 0 25px -4px rgba(38, 139, 255, 0.35);
+}
+
+.glow-electric-sm {
+  box-shadow: 0 0 14px -2px rgba(38, 139, 255, 0.25);
+}
+
+/* Gradient accents */
+.text-gradient-electric {
+  background: linear-gradient(135deg, #268bff 0%, #60b5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-midnight {
+  background: linear-gradient(180deg, rgba(11, 25, 48, 0.8) 0%, rgba(5, 13, 27, 0.95) 100%);
+}
+
+/* Card hover animation */
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -77,7 +131,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
