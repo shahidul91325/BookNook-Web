@@ -46,6 +46,13 @@ export function AddBookForm() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
+  // Unauthenticated Route Guard: Redirect to /login with return destination
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login?redirect=/add-book");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
   // Form Field States
   const [title, setTitle] = React.useState("");
   const [author, setAuthor] = React.useState("");
@@ -204,6 +211,7 @@ export function AddBookForm() {
 
       // Redirect to user's dashboard or books catalog
       router.push("/my-books");
+      router.refresh();
     } catch (error) {
       const message =
         error instanceof Error

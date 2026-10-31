@@ -3,9 +3,11 @@ import { getSessionCookie } from "better-auth/cookies";
 
 /**
  * Checks whether the incoming path requires authentication.
+ * Protects /add-book, /my-books, /my-borrows, and Book Details (/books/:id).
  */
 function isProtectedPath(pathname: string): boolean {
-  return (
+  // Add Book, My Books, and My Borrows
+  if (
     pathname === "/add-book" ||
     pathname.startsWith("/add-book/") ||
     pathname === "/books/add" ||
@@ -14,7 +16,20 @@ function isProtectedPath(pathname: string): boolean {
     pathname.startsWith("/my-books/") ||
     pathname === "/my-borrows" ||
     pathname.startsWith("/my-borrows/")
-  );
+  ) {
+    return true;
+  }
+
+  // Book Details: /books/:id (excluding public /books catalog)
+  if (
+    pathname.startsWith("/books/") &&
+    pathname !== "/books/" &&
+    pathname !== "/books/add"
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -23,9 +38,11 @@ function isProtectedPath(pathname: string): boolean {
 function hasSessionCookie(request: NextRequest): boolean {
   try {
     const sessionCookie = getSessionCookie(request);
-    if (sessionCookie) return true;
+    if (sessionCookie && typeof sessionCookie === "string" && sessionCookie.trim()) {
+      return true;
+    }
   } catch {
-    // Fall back to direct cookie inspection if getSessionCookie encounters unexpected header shape
+    // Fall back to direct cookie inspection if getSessionCookie encounters an unexpected header shape
   }
 
   const fallbackCookieNames = [
@@ -38,7 +55,10 @@ function hasSessionCookie(request: NextRequest): boolean {
     "user_session",
   ];
 
-  return fallbackCookieNames.some((name) => Boolean(request.cookies.get(name)?.value));
+  return fallbackCookieNames.some((name) => {
+    const val = request.cookies.get(name)?.value;
+    return Boolean(val && val.trim() && val !== "undefined" && val !== "null");
+  });
 }
 
 /**
@@ -55,14 +75,18 @@ export function proxy(request: NextRequest) {
       request.nextUrl.searchParams.get("redirectTo");
 
     const destination =
-      rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      rawRedirect &&
+      rawRedirect.startsWith("/") &&
+      !rawRedirect.startsWith("//") &&
+      rawRedirect !== "/login" &&
+      rawRedirect !== "/register"
         ? rawRedirect
         : "/books";
 
     return NextResponse.redirect(new URL(destination, request.url));
   }
 
-  // 2. Protect authenticated routes: redirect unauthenticated users to /login
+  // 2. Protect authenticated routes: redirect unauthenticated users to /login with return destination
   if (!isAuthenticated && isProtectedPath(pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);
@@ -78,6 +102,7 @@ export const config = {
     "/add-book",
     "/books/add/:path*",
     "/books/add",
+    "/books/:path*",
     "/my-books/:path*",
     "/my-books",
     "/my-borrows/:path*",

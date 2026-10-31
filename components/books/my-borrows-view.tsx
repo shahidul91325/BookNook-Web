@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Bookmark,
@@ -153,12 +154,20 @@ function getDueInfo(returnDateStr?: string, isReturned?: boolean) {
 }
 
 export function MyBorrowsView() {
+  const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const [borrows, setBorrows] = React.useState<BorrowRecord[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [retryKey, setRetryKey] = React.useState(0);
+
+  // Unauthenticated Route Guard: Redirect to /login with return destination
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/login?redirect=/my-borrows");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   // Return Book Confirmation Dialog & Mutation State
   const [selectedRecordForReturn, setSelectedRecordForReturn] = React.useState<BorrowRecord | null>(null);

@@ -135,7 +135,7 @@ export function FeaturedBooksSection() {
               favorite books with the BookNook reading community today!
             </p>
             <Button asChild variant="default" size="sm" className="gap-2 text-xs font-semibold">
-              <Link href="/books/add">
+              <Link href="/add-book">
                 <PlusCircle className="h-3.5 w-3.5" />
                 Add First Book
               </Link>

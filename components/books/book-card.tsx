@@ -26,7 +26,11 @@ export function BookCard({ book, className }: BookCardProps) {
     >
       <div className="flex flex-col">
         {/* Book Cover Container */}
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface mb-3.5 border border-border/50">
+        <Link
+          href={`/books/${bookId}`}
+          className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface mb-3.5 border border-border/50 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={`View details for ${book.title}`}
+        >
           {book.image ? (
             <Image
               src={book.image}
@@ -55,14 +59,16 @@ export function BookCard({ book, className }: BookCardProps) {
               </span>
             )}
           </div>
-        </div>
+        </Link>
 
         {/* Title & Author */}
         <h3
           className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors text-base"
           title={book.title}
         >
-          {book.title}
+          <Link href={`/books/${bookId}`} className="hover:underline">
+            {book.title}
+          </Link>
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5 mb-2.5 line-clamp-1">
           {book.author}

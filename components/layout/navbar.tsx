@@ -288,7 +288,12 @@ export function Navbar() {
               );
             })}
 
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="py-3 px-3.5 space-y-2 animate-pulse">
+                <div className="h-4 w-28 bg-surface rounded" />
+                <div className="h-9 w-full bg-surface rounded-lg" />
+              </div>
+            ) : isAuthenticated ? (
               <>
                 <div className="my-2 border-t border-border/60" />
                 <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">

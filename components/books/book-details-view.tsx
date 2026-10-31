@@ -46,11 +46,18 @@ interface BookDetailsViewProps {
 
 export function BookDetailsView({ bookId }: BookDetailsViewProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const [book, setBook] = React.useState<Book | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  // Route Protection: Unauthenticated users accessing Book Details must be redirected to /login
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace(`/login?redirect=/books/${encodeURIComponent(bookId)}`);
+    }
+  }, [isAuthLoading, isAuthenticated, bookId, router]);
 
   // Borrow Dialog State
   const [isBorrowDialogOpen, setIsBorrowDialogOpen] = React.useState(false);
@@ -190,7 +197,7 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
   };
 
   // Loading Skeleton View
-  if (isLoading) {
+  if (isAuthLoading || !isAuthenticated || isLoading) {
     return (
       <div className="py-8 sm:py-12 bg-background min-h-screen">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -566,7 +573,10 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
         book={book}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onDeleted={() => router.push("/books")}
+        onDeleted={() => {
+          router.push("/books");
+          router.refresh();
+        }}
       />
     </div>
   );

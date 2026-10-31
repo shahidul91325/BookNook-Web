@@ -26,7 +26,11 @@ export function BookListItem({ book, className }: BookListItemProps) {
     >
       <div className="flex items-center gap-4 w-full sm:w-auto">
         {/* Book Thumbnail */}
-        <div className="relative aspect-[3/4] w-20 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-surface border border-border/50">
+        <Link
+          href={`/books/${bookId}`}
+          className="relative aspect-[3/4] w-20 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-surface border border-border/50 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={`View details for ${book.title}`}
+        >
           {book.image ? (
             <Image
               src={book.image}
@@ -40,7 +44,7 @@ export function BookListItem({ book, className }: BookListItemProps) {
               <BookOpen className="h-8 w-8 text-primary/40" />
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Book Details */}
         <div className="flex flex-col flex-1 min-w-0">
@@ -66,7 +70,9 @@ export function BookListItem({ book, className }: BookListItemProps) {
             className="font-semibold text-foreground text-base sm:text-lg group-hover:text-primary transition-colors truncate"
             title={book.title}
           >
-            {book.title}
+            <Link href={`/books/${bookId}`} className="hover:underline">
+              {book.title}
+            </Link>
           </h3>
 
           <p className="text-xs text-muted-foreground mb-2">

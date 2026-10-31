@@ -63,7 +63,7 @@ const slides: SlideData[] = [
     primaryCtaText: "Explore Collection",
     primaryCtaHref: "/books",
     secondaryCtaText: "Add Your Book",
-    secondaryCtaHref: "/books/add",
+    secondaryCtaHref: "/add-book",
     featuredBook: {
       title: "Clean Code",
       author: "Robert C. Martin",
