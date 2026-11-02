@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth/client";
+import { authClient, AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/client";
+import { clearStoredAuthTokens } from "@/lib/api/client";
 import type { AuthUser } from "@/types";
 
 export function useAuth() {
@@ -24,9 +25,8 @@ export function useAuth() {
       try {
         await authClient.signOut();
         if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("better-auth_session_token");
+          clearStoredAuthTokens();
+          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
         }
         toast.success("You have been signed out.");
         router.push(redirectTo);

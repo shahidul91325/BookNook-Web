@@ -22,22 +22,43 @@ export function getApiBaseUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-/** Extract stored session token (localStorage or cookie fallback) */
+/** Storage keys that may hold the session token, checked in preference order. */
+export const AUTH_TOKEN_STORAGE_KEYS: readonly string[] = [
+  "booknook_token",
+  "better-auth.session_token",
+  "better-auth_session_token",
+  "token",
+  "auth_token",
+];
+
+/** Clears every locally stored session token (used on logout and 401). */
+export function clearStoredAuthTokens(): void {
+  if (typeof window === "undefined") return;
+  for (const key of AUTH_TOKEN_STORAGE_KEYS) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Storage unavailable — nothing to clear.
+    }
+  }
+}
+
+/** Extract stored session token from localStorage.
+ *
+ * Note: the httpOnly `better-auth.session_token` cookie cannot be read
+ * from `document.cookie` by design; authentication relies on the cookie
+ * riding along automatically (`credentials: "include"`) or on the
+ * bearer token persisted under `booknook_token`.
+ */
 export function getStoredAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const fromStorage =
-      localStorage.getItem("booknook_token") ||
-      localStorage.getItem("better-auth.session_token") ||
-      localStorage.getItem("better-auth_session_token") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("auth_token");
-    if (fromStorage) return fromStorage;
-
-    // Check cookies for better-auth session tokens
-    const match = document.cookie.match(/(?:^|;\s*)(?:__Secure-)?(?:better-auth\.session_token|token|auth_token)=([^;]+)/);
-    if (match) return decodeURIComponent(match[1]);
-
+    for (const key of AUTH_TOKEN_STORAGE_KEYS) {
+      const value = localStorage.getItem(key);
+      if (value && value.trim() && value !== "undefined" && value !== "null") {
+        return value;
+      }
+    }
     return null;
   } catch {
     return null;
@@ -114,7 +135,8 @@ export async function apiRequest<T>(
   }
 
   const token = getStoredAuthToken();
-  if (token && !headers.has("Authorization")) {
+  const isBearerRequest = Boolean(token);
+  if (isBearerRequest && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -136,6 +158,13 @@ export async function apiRequest<T>(
   const body = await readJsonBody(response);
 
   if (!response.ok) {
+    // A rejected/stale bearer token is no longer trusted: clear it so the
+    // next request either re-authenticates via the httpOnly cookie or
+    // surfaces a clean sign-in requirement instead of repeating with a dead
+    // token.
+    if (response.status === 401 && isBearerRequest) {
+      clearStoredAuthTokens();
+    }
     const errorMessage = extractErrorMessage(
       body,
       `Request failed with status ${response.status}`

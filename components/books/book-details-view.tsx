@@ -84,55 +84,55 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
   }, []);
 
   // Fetch Book Data
-  const loadBook = React.useCallback(async () => {
+  const isCancelledRef = React.useRef(false);
+
+  // Fetch Book Data
+  const reloadBook = React.useCallback(async () => {
     try {
+      setIsLoading(true);
       const data = await bookService.getBookById(bookId);
-      if (data) {
+      if (!isCancelledRef.current) {
         setBook(data);
         setErrorMessage(null);
-      } else {
-        setErrorMessage("Book not found in library.");
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not load book details.";
-      setErrorMessage(message);
+      if (!isCancelledRef.current) {
+        setBook(null);
+        setErrorMessage(
+          error instanceof Error ? error.message : "Could not load book details."
+        );
+      }
     } finally {
-      setIsLoading(false);
+      if (!isCancelledRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [bookId]);
 
   React.useEffect(() => {
-    let isCancelled = false;
-
-    async function initialFetch() {
+    isCancelledRef.current = false;
+    void (async () => {
       try {
         const data = await bookService.getBookById(bookId);
-        if (!isCancelled) {
-          if (data) {
-            setBook(data);
-            setErrorMessage(null);
-          } else {
-            setErrorMessage("Book not found in library.");
-          }
+        if (!isCancelledRef.current) {
+          setBook(data);
+          setErrorMessage(null);
         }
       } catch (error) {
-        if (!isCancelled) {
-          const message =
-            error instanceof Error ? error.message : "Could not load book details.";
-          setErrorMessage(message);
+        if (!isCancelledRef.current) {
+          setBook(null);
+          setErrorMessage(
+            error instanceof Error ? error.message : "Could not load book details."
+          );
         }
       } finally {
-        if (!isCancelled) {
+        if (!isCancelledRef.current) {
           setIsLoading(false);
         }
       }
-    }
-
-    initialFetch();
-
+    })();
     return () => {
-      isCancelled = true;
+      isCancelledRef.current = true;
     };
   }, [bookId]);
 
@@ -181,7 +181,7 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
         prev
           ? {
               ...prev,
-              quantity: Math.max(0, (prev.quantity || 1) - 1),
+              availableCopies: Math.max(0, (prev.availableCopies ?? prev.quantity ?? 1) - 1),
             }
           : null
       );
@@ -231,10 +231,7 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setIsLoading(true);
-                loadBook();
-              }}
+              onClick={() => reloadBook()}
               className="gap-2"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -246,8 +243,9 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
     );
   }
 
-  const isAvailable = book.quantity !== undefined ? book.quantity > 0 : true;
-  const copiesCount = book.quantity !== undefined ? book.quantity : 0;
+  const availableCopies = book.availableCopies ?? book.quantity ?? 0;
+  const isAvailable = availableCopies > 0;
+  const copiesCount = availableCopies;
   const isOwner = Boolean(
     user?.email &&
       book?.userEmail &&

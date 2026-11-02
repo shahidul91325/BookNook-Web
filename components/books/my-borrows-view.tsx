@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Bookmark,
@@ -157,7 +157,14 @@ function getDueInfo(returnDateStr?: string, isReturned?: boolean) {
 
 export function MyBorrowsView() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  // Login redirect that preserves the user's originally requested route.
+  const loginRedirect = React.useMemo(
+    () => `/login?redirect=${encodeURIComponent(pathname)}`,
+    [pathname]
+  );
 
   const [borrows, setBorrows] = React.useState<BorrowRecord[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -167,9 +174,9 @@ export function MyBorrowsView() {
   // Unauthenticated Route Guard: Redirect to /login with return destination
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.replace("/login?redirect=/my-borrows");
+      router.replace(loginRedirect);
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router, loginRedirect]);
 
   // Return Book Confirmation Dialog & Mutation State
   const [selectedRecordForReturn, setSelectedRecordForReturn] = React.useState<BorrowRecord | null>(null);

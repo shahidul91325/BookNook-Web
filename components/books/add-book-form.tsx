@@ -1,37 +1,21 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  PlusCircle,
-  Loader2,
-  AlertCircle,
-  ArrowLeft,
-  LogIn,
-} from "lucide-react";
-import { toast } from "sonner";
-import { bookService } from "@/services/book-service";
-import { useAuth } from "@/hooks/use-auth";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { ImageUpload } from "@/components/ui/image-upload";
-import { AuthLink } from "@/components/auth/auth-link";
-import type { BookCategory, CreateBookInput } from "@/types";
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { PlusCircle, Loader2, AlertCircle, ArrowLeft, LogIn } from 'lucide-react';
+import { toast } from 'sonner';
+import { bookService } from '@/services/book-service';
+import { useAuth } from '@/hooks/use-auth';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { AuthLink } from '@/components/auth/auth-link';
+import type { BookCategory, CreateBookInput } from '@/types';
 
-const CATEGORIES: BookCategory[] = [
-  "Fiction",
-  "Science",
-  "History",
-  "Kids",
-  "Self Help",
-  "Programming",
-  "Fantasy",
-  "Financial",
-  "Others",
-];
+const CATEGORIES: BookCategory[] = ['Fiction', 'Science', 'History', 'Kids', 'Others'];
 
 interface FormErrors {
   title?: string;
@@ -73,23 +57,29 @@ export function AddBookFormSkeleton() {
 
 export function AddBookForm() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  // Login redirect that preserves the user's originally requested route.
+  const loginRedirect = React.useMemo(
+    () => `/login?redirect=${encodeURIComponent(pathname)}`,
+    [pathname]
+  );
 
   // Unauthenticated Route Guard: Redirect to /login with return destination
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.replace("/login?redirect=/add-book");
+      router.replace(loginRedirect);
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router, loginRedirect]);
 
   // Form Field States
-  const [title, setTitle] = React.useState("");
-  const [author, setAuthor] = React.useState("");
-  const [category, setCategory] = React.useState<BookCategory>("Fiction");
-  const [image, setImage] = React.useState("");
-  const [quantity, setQuantity] = React.useState("5");
-  const [description, setDescription] = React.useState("");
-  const [rating] = React.useState("5");
+  const [title, setTitle] = React.useState('');
+  const [author, setAuthor] = React.useState('');
+  const [category, setCategory] = React.useState<BookCategory>('Fiction');
+  const [image, setImage] = React.useState('');
+  const [quantity, setQuantity] = React.useState('5');
+  const [description, setDescription] = React.useState('');
 
   // Status & Validation States
   const [errors, setErrors] = React.useState<FormErrors>({});
@@ -106,50 +96,50 @@ export function AddBookForm() {
   const validateField = (field: string) => {
     const newErrors = { ...errors };
 
-    if (field === "title") {
+    if (field === 'title') {
       if (!title.trim()) {
-        newErrors.title = "Book title is required.";
+        newErrors.title = 'Book title is required.';
       } else if (title.trim().length < 2) {
-        newErrors.title = "Title must be at least 2 characters.";
+        newErrors.title = 'Title must be at least 2 characters.';
       } else {
         delete newErrors.title;
       }
     }
 
-    if (field === "author") {
+    if (field === 'author') {
       if (!author.trim()) {
-        newErrors.author = "Author name is required.";
+        newErrors.author = 'Author name is required.';
       } else if (author.trim().length < 2) {
-        newErrors.author = "Author must be at least 2 characters.";
+        newErrors.author = 'Author must be at least 2 characters.';
       } else {
         delete newErrors.author;
       }
     }
 
-    if (field === "image") {
+    if (field === 'image') {
       if (!image.trim()) {
-        newErrors.image = "Book cover image is required.";
-      } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/")) {
-        newErrors.image = "Please upload an image or enter a valid HTTP/HTTPS URL.";
+        newErrors.image = 'Book cover image is required.';
+      } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith('/uploads/')) {
+        newErrors.image = 'Please upload an image or enter a valid HTTP/HTTPS URL.';
       } else {
         delete newErrors.image;
       }
     }
 
-    if (field === "quantity") {
+    if (field === 'quantity') {
       const q = parseInt(quantity, 10);
       if (isNaN(q) || q < 1) {
-        newErrors.quantity = "Quantity must be at least 1 copy.";
+        newErrors.quantity = 'Quantity must be at least 1 copy.';
       } else {
         delete newErrors.quantity;
       }
     }
 
-    if (field === "description") {
+    if (field === 'description') {
       if (!description.trim()) {
-        newErrors.description = "Short description is required.";
+        newErrors.description = 'Short description is required.';
       } else if (description.trim().length < 10) {
-        newErrors.description = "Description should be at least 10 characters.";
+        newErrors.description = 'Description should be at least 10 characters.';
       } else {
         delete newErrors.description;
       }
@@ -163,32 +153,32 @@ export function AddBookForm() {
     const newErrors: FormErrors = {};
 
     if (!title.trim()) {
-      newErrors.title = "Book title is required.";
+      newErrors.title = 'Book title is required.';
     } else if (title.trim().length < 2) {
-      newErrors.title = "Title must be at least 2 characters.";
+      newErrors.title = 'Title must be at least 2 characters.';
     }
 
     if (!author.trim()) {
-      newErrors.author = "Author name is required.";
+      newErrors.author = 'Author name is required.';
     } else if (author.trim().length < 2) {
-      newErrors.author = "Author must be at least 2 characters.";
+      newErrors.author = 'Author must be at least 2 characters.';
     }
 
     if (!image.trim()) {
-      newErrors.image = "Book cover image is required.";
-    } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith("/uploads/")) {
-      newErrors.image = "Please upload an image or enter a valid HTTP/HTTPS URL.";
+      newErrors.image = 'Book cover image is required.';
+    } else if (!/^https?:\/\/.+/i.test(image.trim()) && !image.trim().startsWith('/uploads/')) {
+      newErrors.image = 'Please upload an image or enter a valid HTTP/HTTPS URL.';
     }
 
     const q = parseInt(quantity, 10);
     if (isNaN(q) || q < 1) {
-      newErrors.quantity = "Quantity must be at least 1 copy.";
+      newErrors.quantity = 'Quantity must be at least 1 copy.';
     }
 
     if (!description.trim()) {
-      newErrors.description = "Short description is required.";
+      newErrors.description = 'Short description is required.';
     } else if (description.trim().length < 10) {
-      newErrors.description = "Description should be at least 10 characters.";
+      newErrors.description = 'Description should be at least 10 characters.';
     }
 
     setErrors(newErrors);
@@ -209,13 +199,13 @@ export function AddBookForm() {
     e.preventDefault();
 
     if (!validateAll()) {
-      toast.error("Please resolve the validation errors before submitting.");
+      toast.error('Please resolve the validation errors before submitting.');
       return;
     }
 
     if (!user) {
-      toast.error("Authentication required. Please sign in.");
-      router.push("/login?redirect=/add-book");
+      toast.error('Authentication required. Please sign in.');
+      router.push(loginRedirect);
       return;
     }
 
@@ -228,9 +218,8 @@ export function AddBookForm() {
         image: image.trim(),
         quantity: parseInt(quantity, 10) || 1,
         description: description.trim(),
-        userName: user.name || "BookNook Member",
+        userName: user.name || 'BookNook Member',
         userEmail: user.email,
-        rating: parseFloat(rating) || 5,
       };
 
       await bookService.createBook(payload);
@@ -238,13 +227,10 @@ export function AddBookForm() {
       toast.success(`"${title}" has been added to the BookNook library!`);
 
       // Redirect to user's dashboard or books catalog
-      router.push("/my-books");
+      router.push('/my-books');
       router.refresh();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to submit book to the server. Please try again.";
+      const message = error instanceof Error ? error.message : 'Failed to submit book to the server. Please try again.';
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -306,9 +292,7 @@ export function AddBookForm() {
               <PlusCircle className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                Add a New Book
-              </h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Add a New Book</h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 Fill in the details to publish a new book to the BookNook library collection.
               </p>
@@ -328,8 +312,8 @@ export function AddBookForm() {
                   placeholder="e.g. Atomic Habits"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  onBlur={() => handleBlur("title")}
-                  className={errors.title && touched.title ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  onBlur={() => handleBlur('title')}
+                  className={errors.title && touched.title ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
                 {errors.title && touched.title && (
                   <p className="flex items-center gap-1 text-[11px] text-red-500 mt-1 font-medium">
@@ -349,8 +333,8 @@ export function AddBookForm() {
                   placeholder="e.g. James Clear"
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
-                  onBlur={() => handleBlur("author")}
-                  className={errors.author && touched.author ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  onBlur={() => handleBlur('author')}
+                  className={errors.author && touched.author ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
                 {errors.author && touched.author && (
                   <p className="flex items-center gap-1 text-[11px] text-red-500 mt-1 font-medium">
@@ -368,10 +352,7 @@ export function AddBookForm() {
                 <label className="text-xs font-semibold text-foreground block mb-1.5">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as BookCategory)}
-                >
+                <Select value={category} onChange={(e) => setCategory(e.target.value as BookCategory)}>
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
@@ -392,8 +373,8 @@ export function AddBookForm() {
                   placeholder="e.g. 5"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  onBlur={() => handleBlur("quantity")}
-                  className={errors.quantity && touched.quantity ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  onBlur={() => handleBlur('quantity')}
+                  className={errors.quantity && touched.quantity ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
                 {errors.quantity && touched.quantity && (
                   <p className="flex items-center gap-1 text-[11px] text-red-500 mt-1 font-medium">
@@ -434,8 +415,8 @@ export function AddBookForm() {
                 placeholder="Enter a brief synopsis of the book, core themes, or why readers should check it out..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                onBlur={() => handleBlur("description")}
-                className={errors.description && touched.description ? "border-red-500 focus-visible:ring-red-500" : ""}
+                onBlur={() => handleBlur('description')}
+                className={errors.description && touched.description ? 'border-red-500 focus-visible:ring-red-500' : ''}
               />
               {errors.description && touched.description && (
                 <p className="flex items-center gap-1 text-[11px] text-red-500 mt-1 font-medium">
@@ -449,12 +430,10 @@ export function AddBookForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-border/60">
               {/* User Name */}
               <div>
-                <label className="text-xs font-semibold text-foreground block mb-1.5">
-                  Contributor Name
-                </label>
+                <label className="text-xs font-semibold text-foreground block mb-1.5">Contributor Name</label>
                 <Input
                   type="text"
-                  value={user?.name || "BookNook Member"}
+                  value={user?.name || 'BookNook Member'}
                   disabled
                   className="bg-surface/50 text-muted-foreground cursor-not-allowed text-xs"
                 />
@@ -462,12 +441,10 @@ export function AddBookForm() {
 
               {/* User Email */}
               <div>
-                <label className="text-xs font-semibold text-foreground block mb-1.5">
-                  Contributor Email
-                </label>
+                <label className="text-xs font-semibold text-foreground block mb-1.5">Contributor Email</label>
                 <Input
                   type="email"
-                  value={user?.email || ""}
+                  value={user?.email || ''}
                   disabled
                   className="bg-surface/50 text-muted-foreground cursor-not-allowed text-xs"
                 />

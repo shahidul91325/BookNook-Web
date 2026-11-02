@@ -14,8 +14,8 @@ interface BookListItemProps {
 
 export function BookListItem({ book, className }: BookListItemProps) {
   const bookId = book.id || book._id;
-  const isAvailable = book.quantity !== undefined ? book.quantity > 0 : true;
-  const availableCopies = book.quantity !== undefined ? book.quantity : 1;
+  const availableCopies = book.availableCopies ?? book.quantity ?? 1;
+  const isAvailable = availableCopies > 0;
 
   return (
     <div

@@ -1,14 +1,4 @@
-export type BookCategory =
-  | "Fiction"
-  | "Science"
-  | "History"
-  | "Kids"
-  | "Self Help"
-  | "Programming"
-  | "Fantasy"
-  | "Financial"
-  | "Others";
-
+export type BookCategory = 'Fiction' | 'Science' | 'History' | 'Kids' | 'Others';
 export interface Book {
   id: string;
   _id?: string;
@@ -17,6 +7,8 @@ export interface Book {
   category: BookCategory | string;
   image: string;
   quantity: number;
+  /** Copies currently available to borrow (server-computed; may differ from quantity while copies are out on loan). */
+  availableCopies?: number;
   isbn?: string;
   rating?: number;
   reviewsCount?: number;
@@ -30,7 +22,8 @@ export interface Book {
 export interface BookFilterParams {
   category?: string;
   search?: string;
-  sort?: "newest" | "oldest" | "rating" | "title" | string;
+  /** Sort modes supported by `GET /api/books`; unknown values fall back to the backend default. */
+  sort?: 'newest' | 'oldest' | 'title-asc' | 'title-desc' | 'quantity-desc' | string;
   limit?: number;
   page?: number;
 }

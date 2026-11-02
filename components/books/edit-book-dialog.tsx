@@ -22,9 +22,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Book, BookCategory, UpdateBookInput } from "@/types";
+import type { Book, UpdateBookInput } from "@/types";
 
-const CATEGORIES: BookCategory[] = [
+const CATEGORIES: string[] = [
   "Fiction",
   "Science",
   "History",
@@ -60,7 +60,7 @@ interface EditBookFormInnerProps {
 function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerProps) {
   const [title, setTitle] = React.useState(book.title || "");
   const [author, setAuthor] = React.useState(book.author || "");
-  const [category, setCategory] = React.useState<BookCategory>((book.category as BookCategory) || "Fiction");
+  const [category, setCategory] = React.useState<string>(book.category || "Fiction");
   const [image, setImage] = React.useState(book.image || "");
   const [quantity, setQuantity] = React.useState(String(book.quantity !== undefined ? book.quantity : 1));
   const [description, setDescription] = React.useState(book.description || "");
@@ -242,7 +242,7 @@ function EditBookFormInner({ book, onOpenChange, onUpdated }: EditBookFormInnerP
           </label>
           <Select
             value={category}
-            onChange={(e) => setCategory(e.target.value as BookCategory)}
+            onChange={(e) => setCategory(e.target.value)}
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>

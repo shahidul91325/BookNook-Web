@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Library,
   PlusCircle,
@@ -36,7 +36,14 @@ import type { Book } from "@/types";
 
 export function MyBooksView() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  // Login redirect that preserves the user's originally requested route.
+  const loginRedirect = React.useMemo(
+    () => `/login?redirect=${encodeURIComponent(pathname)}`,
+    [pathname]
+  );
 
   const [books, setBooks] = React.useState<Book[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -46,9 +53,9 @@ export function MyBooksView() {
   // Unauthenticated Route Guard: Redirect to /login with return destination
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.replace("/login?redirect=/my-books");
+      router.replace(loginRedirect);
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router, loginRedirect]);
 
   // Edit / Delete dialog states
   const [selectedBookForEdit, setSelectedBookForEdit] = React.useState<Book | null>(null);
