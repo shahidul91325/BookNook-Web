@@ -79,18 +79,20 @@ export function BooksCatalog() {
 
     async function fetchCatalog() {
       try {
-        const data = await bookService.getBooks({
-          category: categoryParam !== "All" ? categoryParam : undefined,
-          search: searchParam.trim() || undefined,
-          sort: sortParam,
-        });
+        // Fetch the complete book list from the backend. Category, search,
+        // and availability filtering are applied client-side in
+        // `filteredBooks`, so the category dropdown always lists every
+        // available category regardless of the active filter.
+        const data = await bookService.getBooks({ sort: sortParam });
 
         if (!isCancelled) {
           const list = Array.isArray(data) ? data : [];
           setBooks(list);
           setErrorMessage(null);
 
-          // Compute category counts dynamically from backend books
+          // Compute category counts from the complete book set (not the
+          // filtered subset) so every category stays visible in the filter
+          // dropdown even after a category is selected.
           const counts = new Map<string, number>();
           list.forEach((b: Book) => {
             if (b.category && typeof b.category === "string") {
@@ -122,7 +124,7 @@ export function BooksCatalog() {
     return () => {
       isCancelled = true;
     };
-  }, [categoryParam, searchParam, sortParam, retryKey]);
+  }, [sortParam, retryKey]);
 
   // Handle Search Submit / Debounce
   const handleSearchSubmit = (e: React.FormEvent) => {
