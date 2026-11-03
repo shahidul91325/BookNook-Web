@@ -34,11 +34,22 @@ export class ApiError extends Error {
 
 /** Get base API URL from environment variable or fallback */
 export function getApiBaseUrl(): string {
-  const url =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_URL ||
-    "http://localhost:5000";
-  return url.replace(/\/+$/, "");
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const url = configuredUrl ||
+    (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "");
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_API_URL must point to the Express API origin.");
+  }
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error("NEXT_PUBLIC_API_URL must be an absolute http(s) URL.");
+  }
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new Error("NEXT_PUBLIC_API_URL must use http or https.");
+  }
+  return parsedUrl.toString().replace(/\/+$/, "");
 }
 
 /** Clears every locally stored auth token (used on logout and 401). */

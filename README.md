@@ -13,19 +13,20 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 # Auth requests stay same-origin so the remote Express server's httpOnly
 # session cookie is available to the Next.js proxy. next.config.ts rewrites
 # /api/auth/* to this server-side destination.
-NEXT_PUBLIC_AUTH_URL=http://localhost:3000/api/auth
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_AUTH_URL=/api/auth
 AUTH_SERVER_URL=http://localhost:5000/api/auth
 
 # The Better Auth secret, Google OAuth credentials, and MongoDB URI/database
 # belong in BookNook-Server/.env. Do not put server secrets in this frontend.
 
-# Image Storage (Required for book cover uploads)
+# Optional image storage (required only when uploading book covers)
 # Images are uploaded to ImgBB. The key is read server-side only and is never
 # exposed to the browser. Get a free key at https://api.imgbb.com/
 IMGBB_API_KEY=your_imgbb_api_key_here
 ```
 
-### Required: `IMGBB_API_KEY`
+### Optional: `IMGBB_API_KEY`
 
 Book cover images are uploaded through the `/api/upload` route, which sends them directly to [ImgBB](https://api.imgbb.com/). The permanent hosted URL returned by ImgBB is stored on the book document in MongoDB.
 
@@ -34,7 +35,7 @@ Set `IMGBB_API_KEY` in:
 - **Local development:** `.env.local` (git-ignored, never committed)
 - **Vercel production:** Project Settings → Environment Variables → add `IMGBB_API_KEY`
 
-Without this variable, image uploads return a 500 error instead of falling back to local disk storage (Vercel's filesystem is read-only).
+Without this variable, the image upload endpoint returns a configuration error. Vercel's filesystem is read-only, so uploads are not saved locally.
 
 ## Getting Started
 
@@ -77,3 +78,50 @@ claims. The browser never supplies an owner ID as authority.
 5. The frontend saves that URL in the `image` field of the MongoDB book document when creating or updating a book.
 
 The API key never reaches the browser; all ImgBB communication happens in the Next.js route handler.
+
+## Vercel configuration
+
+The frontend and backend are separate Vercel projects. Set each project root to
+its repository root. Vercel recognizes the backend's root `server.ts` default
+Express export; no backend `vercel.json` or custom backend rewrite is required.
+
+### Frontend project variables
+
+Set these for Production and Preview, with values matching that environment:
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Express API origin, such as `https://<backend-domain>` |
+| `NEXT_PUBLIC_APP_URL` | Stable frontend origin, such as `https://<frontend-domain>` |
+| `NEXT_PUBLIC_AUTH_URL` | `/api/auth` |
+| `AUTH_SERVER_URL` | Express auth mount, such as `https://<backend-domain>/api/auth` |
+| `IMGBB_API_KEY` | Optional server-only key, needed only for cover uploads |
+
+`NEXT_PUBLIC_*` values are embedded during `next build`, so configure them
+before deploying. Keep the Better Auth secret, Google OAuth credentials, and
+MongoDB URI out of the frontend project.
+
+### Backend project variables
+
+Required in Production and Preview: `MONGODB_URI`, `MONGODB_DB_NAME`,
+`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `CORS_ORIGIN`. Populate secrets
+directly in Vercel, never in committed files.
+
+- `BETTER_AUTH_URL` is the matching frontend origin plus `/api/auth`.
+- `CORS_ORIGIN` is the exact frontend origin or comma-separated exact origins;
+  do not include paths or `*`.
+- `JWT_JWKS_URL` is recommended as the direct backend URL ending in
+  `/api/auth/jwks`; if omitted, the verifier uses the frontend auth rewrite.
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are required only for Google login.
+- `JWT_ISSUER` and `JWT_AUDIENCE` are optional; defaults match `BETTER_AUTH_URL`.
+- `PORT` is for local development; Vercel supplies its own listener.
+
+Use a stable frontend Preview domain and configure the backend Preview
+`CORS_ORIGIN` and `BETTER_AUTH_URL` to match it. Register that domain's
+`/api/auth/callback/google` URL with Google. A changing generated preview host
+requires corresponding backend Preview and Google OAuth settings. Production
+must use the production frontend domain.
+
+For local development, run Next.js on port 3000 and Express on port 5000. The
+example files contain the local URLs; the backend README lists its full
+environment configuration.

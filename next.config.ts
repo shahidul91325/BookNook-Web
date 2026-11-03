@@ -2,13 +2,36 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    const authServerUrl = process.env.AUTH_SERVER_URL?.trim().replace(/\/+$/, "");
-    if (!authServerUrl) return [];
+    const configuredAuthServerUrl = process.env.AUTH_SERVER_URL?.trim();
+    const authServerUrl = configuredAuthServerUrl
+      ? configuredAuthServerUrl.replace(/\/+$/, "")
+      : process.env.NODE_ENV === "development"
+        ? "http://localhost:5000/api/auth"
+        : undefined;
+
+    if (!authServerUrl) {
+      throw new Error(
+        "AUTH_SERVER_URL is required outside local development; set it to the Express Better Auth URL ending in /api/auth."
+      );
+    }
+
+    let parsedAuthServerUrl: URL;
+    try {
+      parsedAuthServerUrl = new URL(authServerUrl);
+    } catch {
+      throw new Error("AUTH_SERVER_URL must be an absolute http(s) URL.");
+    }
+    if (
+      !["http:", "https:"].includes(parsedAuthServerUrl.protocol) ||
+      !parsedAuthServerUrl.pathname.replace(/\/+$/, "").endsWith("/api/auth")
+    ) {
+      throw new Error("AUTH_SERVER_URL must be an http(s) URL ending in /api/auth.");
+    }
 
     return [
       {
         source: "/api/auth/:path*",
-        destination: `${authServerUrl}/:path*`,
+        destination: `${parsedAuthServerUrl.toString().replace(/\/+$/, "")}/:path*`,
       },
     ];
   },
