@@ -76,13 +76,31 @@ function persistTokenFromResponse(
   }
 }
 
-const authUrl = process.env.NEXT_PUBLIC_AUTH_URL;
-const isAbsolute = Boolean(authUrl && /^https?:\/\//i.test(authUrl));
+/**
+ * Base URL for the remote authentication server.
+ * Uses NEXT_PUBLIC_AUTH_URL if set, or NEXT_PUBLIC_API_URL + "/api/auth".
+ */
+export function getAuthBaseUrl(): string {
+  const customAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL;
+  if (customAuthUrl && customAuthUrl.trim()) {
+    return customAuthUrl.trim().replace(/\/+$/, "");
+  }
+
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.API_URL ||
+    "http://localhost:5000";
+
+  return `${apiUrl.replace(/\/+$/, "")}/api/auth`;
+}
+
+const authBaseUrl = getAuthBaseUrl();
 
 export const authClient = createAuthClient({
-  ...(isAbsolute && authUrl ? { baseURL: authUrl } : {}),
+  baseURL: authBaseUrl,
   plugins: [jwtClient()],
   fetchOptions: {
+    credentials: "include",
     onResponse: (context) => {
       const headers = context.response?.headers;
       // Session token for the auth server (never a backend JWT).
@@ -126,10 +144,13 @@ export function clearStoredAuthTokens(): void {
 let inFlightTokenPromise: Promise<string | null> | null = null;
 
 /**
- * Obtain a fresh JWT from Better Auth's `jwt()` plugin (`GET /api/auth/token`).
- * Requires an active session; the httpOnly session cookie is sent
- * automatically (`credentials: "include"`). Used to refresh a stale access
- * token without asking the user to sign in again.
+ * Obtain a fresh JWT from Better Auth's `jwt()` plugin.
+ *
+ * Uses the official `authClient.token()` API provided by the `jwtClient` plugin
+ * against the Express Better Auth server (`/api/auth/token`).
+ *
+ * Requires an active session; the session cookie is sent automatically
+ * (`credentials: "include"`).
  */
 export async function refreshAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
@@ -140,10 +161,32 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   inFlightTokenPromise = (async () => {
     try {
-      // 1. Try official client method if attached dynamically by jwtClient plugin
+      // 1. Primary method: official Better Auth token() client API
       const dynamicClient = authClient as unknown as {
-        getToken?: () => Promise<{ data?: { token?: string } } | undefined>;
+        token?: () => Promise<{ data?: { token?: string }; error?: unknown } | undefined>;
+        getToken?: () => Promise<{ data?: { token?: string }; error?: unknown } | undefined>;
       };
+
+      if (typeof dynamicClient.token === "function") {
+        try {
+          const res = await dynamicClient.token();
+          if (
+            res &&
+            "data" in res &&
+            res.data &&
+            typeof res.data.token === "string" &&
+            res.data.token.trim()
+          ) {
+            const token = res.data.token.trim();
+            localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+            return token;
+          }
+        } catch {
+          // Fall through to secondary check
+        }
+      }
+
+      // 2. Secondary method: getToken() if provided
       if (typeof dynamicClient.getToken === "function") {
         try {
           const res = await dynamicClient.getToken();
@@ -163,7 +206,7 @@ export async function refreshAccessToken(): Promise<string | null> {
         }
       }
 
-      // 2. Direct endpoint call to /token via authClient.$fetch
+      // 3. Fallback: direct GET /token against the Express Better Auth server
       const res = await authClient.$fetch<{ token: string }>("/token", {
         method: "GET",
       });
