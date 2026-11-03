@@ -11,8 +11,78 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+type AuthSessionResponse = {
+  user?: { id?: string } | null;
+  session?: { id?: string } | null;
+} | null;
+
+async function verifySession(request: NextRequest): Promise<boolean | null> {
+  const cookie = request.headers.get("cookie");
+  if (!cookie) return false;
+
+  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!configuredApiUrl) return null;
+
+  let authSessionUrl: URL;
+  try {
+    const apiUrl = new URL(configuredApiUrl);
+    if (
+      !["http:", "https:"].includes(apiUrl.protocol) ||
+      apiUrl.pathname !== "/" ||
+      apiUrl.search ||
+      apiUrl.hash
+    ) {
+      return null;
+    }
+    authSessionUrl = new URL("/api/auth/get-session", apiUrl.origin);
+  } catch {
+    return null;
+  }
+
+  try {
+    const response = await fetch(authSessionUrl, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        cookie,
+      },
+      cache: "no-store",
+    });
+
+    if (response.status === 401 || response.status === 403) return false;
+    if (!response.ok) return null;
+
+    const session = (await response.json()) as AuthSessionResponse;
+    return Boolean(session?.user?.id && session.session?.id);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get("origin");
+    if (origin && origin !== request.nextUrl.origin) {
+      return NextResponse.json(
+        { success: false, error: "Cross-origin uploads are not allowed." },
+        { status: 403 }
+      );
+    }
+
+    const authenticated = await verifySession(request);
+    if (authenticated === false) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required. Please sign in." },
+        { status: 401 }
+      );
+    }
+    if (authenticated === null) {
+      return NextResponse.json(
+        { success: false, error: "Authentication service is unavailable." },
+        { status: 503 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 

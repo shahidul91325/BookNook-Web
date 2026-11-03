@@ -138,14 +138,6 @@ export function Footer() {
         {/* Bottom Copyright */}
         <div className="mt-12 border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-3">
           <p>© 2025 BookNook. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/" className="hover:text-primary transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/" className="hover:text-primary transition-colors">
-              Terms of Service
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

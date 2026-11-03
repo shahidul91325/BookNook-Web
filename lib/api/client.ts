@@ -91,7 +91,7 @@ export function normalizeEntity<T>(value: T): T {
   return value;
 }
 
-/** Unwrap response data envelope if present: `{ data: ... }`, `{ books: ... }`, or bare payload */
+/** Unwrap response data envelope if present: `{ data: ... }`, list fields, or a bare payload. */
 export function unwrapData<T>(body: unknown): T {
   if (body && typeof body === "object") {
     const record = body as Record<string, unknown>;
@@ -100,6 +100,9 @@ export function unwrapData<T>(body: unknown): T {
     }
     if ("books" in record && record.books !== undefined) {
       return normalizeEntity(record.books as T);
+    }
+    if ("testimonials" in record && record.testimonials !== undefined) {
+      return normalizeEntity(record.testimonials as T);
     }
     if ("result" in record && record.result !== undefined) {
       return normalizeEntity(record.result as T);

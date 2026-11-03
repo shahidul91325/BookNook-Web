@@ -1,115 +1,134 @@
-# BookNook
+# 📚 BookNook — A Small Online Library
 
-BookNook is a community library application for sharing, borrowing, and managing books. Built with Next.js 16, TypeScript, Tailwind CSS, Better Auth, and MongoDB.
+<p align="center">
+  <img src="./docs/images/booknook-preview.png" alt="BookNook Website Preview" width="100%" />
+</p>
 
-## Environment Variables
+<p align="center">
+  <strong>Discover Books. Share Stories. Keep Reading.</strong>
+</p>
 
-Create a `.env.local` (development) or set these in your production host (e.g. Vercel project settings):
+<p align="center">
+  <a href="https://book-nook-web.vercel.app/">Live Website</a> •
+  <a href="https://github.com/shahidul91325/BookNook-Web">Frontend Repository</a> •
+  <a href="https://github.com/shahidul91325/BookNook-Backend">Backend Repository</a>
+</p>
 
-```env
-# Express API origin used for REST calls and the same-origin /api/auth rewrite.
-NEXT_PUBLIC_API_URL=http://localhost:5000
+## 📖 About
 
-# The Better Auth secret, Google OAuth credentials, and MongoDB URI/database
-# belong in BookNook-Server/.env. Do not put server secrets in this frontend.
+BookNook is a small online library platform where readers can explore books, share their own collections, borrow available books, and manage their borrowing activities.
 
-# Optional image storage (required only when uploading book covers)
-# Images are uploaded to ImgBB. The key is read server-side only and is never
-# exposed to the browser. Get a free key at https://api.imgbb.com/
-IMGBB_API_KEY=your_imgbb_api_key_here
-```
+The platform provides a user-friendly experience for discovering books and managing a personal library with secure authentication and real-time inventory tracking.
 
-### Optional: `IMGBB_API_KEY`
+## ✨ Features
 
-Book cover images are uploaded through the `/api/upload` route, which sends them directly to [ImgBB](https://api.imgbb.com/). The permanent hosted URL returned by ImgBB is stored on the book document in MongoDB.
+- 🔐 **Authentication:** Secure email/password and Google authentication using Better Auth.
+- 📚 **Explore Books:** Browse books with dynamic listings and categories.
+- 🆕 **New Arrivals:** Discover recently added books.
+- ➕ **Add Books:** Authenticated users can contribute books to the library.
+- 📖 **Book Details:** View book information, descriptions, authors, and availability.
+- ✏️ **My Books:** Update and delete books added by the logged-in user.
+- 🔄 **Borrow & Return:** Borrow available books and return borrowed books.
+- 📦 **Inventory Tracking:** Track total and available book copies.
+- 👤 **Personalized Dashboard:** Access user-specific books and borrowing records.
+- 🌓 **Dark & Light Theme:** Switch between visual themes.
+- 📱 **Responsive Design:** Optimized for mobile, tablet, and desktop devices.
 
-Set `IMGBB_API_KEY` in:
+## 🛠️ Tech Stack
 
-- **Local development:** `.env.local` (git-ignored, never committed)
-- **Vercel production:** Project Settings → Environment Variables → add `IMGBB_API_KEY`
+| Technology         | Purpose                              |
+| ------------------ | ------------------------------------ |
+| Next.js App Router | Frontend framework                   |
+| React              | UI development                       |
+| TypeScript         | Type safety                          |
+| Tailwind CSS       | Styling                              |
+| Better Auth        | Authentication                       |
+| MongoDB            | Database integration through backend |
+| JWT                | Secure API authorization             |
+| Swiper.js          | Homepage slider                      |
+| Framer Motion      | Animations                           |
+| Sonner             | Toast notifications                  |
 
-Without this variable, the image upload endpoint returns a configuration error. Vercel's filesystem is read-only, so uploads are not saved locally.
+## 🚀 Installation
 
-## Getting Started
+### 1. Clone the repository
 
 ```bash
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Lint
-npm run lint
+git clone https://github.com/shahidul91325/BookNook-Web.git
+cd BookNook-Web
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+### 2. Install dependencies
 
-## Auth and API routing
+```bash
+npm install
+```
 
-The Express server is the only Better Auth server. The browser uses
-the standard `/api/auth/*` path. Better Auth's client uses its default auth
-base path, and one Next.js rewrite forwards that path to the Express origin in
-`NEXT_PUBLIC_API_URL`. The session cookie stays on the frontend host for
-refreshes, navigation, and the route proxy. REST calls use the same configured
-Express origin directly.
+### 3. Configure environment variables
 
-After sign-in, the frontend obtains a JWT through Better Auth's JWT plugin
-endpoint and sends it as `Authorization: Bearer <token>` to protected REST
-routes. Express verifies the JWT and derives the user identity from verified
-claims. The browser never supplies an owner ID as authority.
+Create a `.env.local` file:
 
-## Image Upload Flow
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+IMGBB_API_KEY=your_imgbb_api_key
+```
 
-1. User selects a book cover image in the Add Book or Edit Book form.
-2. The client posts the file to `/api/upload` (multipart/form-data).
-3. The route handler validates type/size server-side, then uploads the image to ImgBB using the server-side `IMGBB_API_KEY`.
-4. ImgBB returns a permanent hosted image URL, which the API returns in the existing response shape (`{ success: true, url, provider: "imgbb", ... }`).
-5. The frontend saves that URL in the `image` field of the MongoDB book document when creating or updating a book.
+`IMGBB_API_KEY` is optional and is required only for book-cover uploads.
 
-The API key never reaches the browser; all ImgBB communication happens in the Next.js route handler.
+### 4. Run the development server
 
-## Vercel configuration
+```bash
+npm run dev
+```
 
-The frontend and backend are separate Vercel projects. Set each project root to
-its repository root. Vercel recognizes the backend's root `server.ts` default
-Express export; no backend `vercel.json` or custom backend rewrite is required.
+Open http://localhost:3000 in your browser.
 
-### Frontend project variables
+## 🔗 Backend Integration
 
-Set these for Production and Preview, with values matching that environment:
+BookNook uses a separate Express.js backend for book management, borrowing operations, inventory tracking, and protected API requests.
 
-| Variable | Value |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Express API origin, such as `https://<backend-domain>` |
-| `IMGBB_API_KEY` | Optional server-only key, needed only for cover uploads |
+**Backend Repository:**  
+https://github.com/shahidul91325/BookNook-Backend
 
-`NEXT_PUBLIC_API_URL` is embedded during `next build`, so configure it before
-deploying. Keep the Better Auth secret, Google OAuth credentials, and MongoDB
-URI out of the frontend project.
+Make sure the backend is running and `NEXT_PUBLIC_API_URL` points to the correct API origin.
 
-### Backend project variables
+## 📁 Project Structure
 
-Required in Production and Preview: `MONGODB_URI`, `MONGODB_DB_NAME`,
-`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `JWT_JWKS_URL`. Populate secrets
-directly in Vercel, never in committed files.
+```text
+BookNook-Web/
+├── app/
+├── components/
+├── lib/
+├── public/
+├── proxy.ts
+├── next.config.ts
+├── package.json
+└── README.md
+```
 
-- `BETTER_AUTH_URL` is the matching frontend origin plus `/api/auth`.
-- CORS and Better Auth trusted origins are derived from `BETTER_AUTH_URL`.
-- `JWT_JWKS_URL` is the direct Express URL ending in `/api/auth/jwks`.
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are required only for Google login.
-- JWT issuer and audience both use `BETTER_AUTH_URL`.
-- `PORT` is for local development; Vercel supplies its own listener.
+## 🔒 Security
 
-Use a stable frontend Preview domain and configure the backend Preview
-`BETTER_AUTH_URL` to match it. Register that domain's
-`/api/auth/callback/google` URL with Google. A changing generated preview host
-requires corresponding backend Preview and Google OAuth settings. Production
-must use the production frontend domain.
+- Better Auth manages user authentication.
+- JWT is used for protected backend requests.
+- Private pages require authentication.
+- User-specific resources are protected by backend authorization.
+- Backend ownership checks use verified user identity.
 
-For local development, run Next.js on port 3000 and Express on port 5000. The
-example files contain the local URLs; the backend README lists its full
-environment configuration.
+## 🌐 Live Demo
+
+Visit the deployed application:
+
+https://book-nook-web.vercel.app/
+
+## 👨‍💻 Developer
+
+**Md. Shahidul Islam**
+
+- GitHub: https://github.com/shahidul91325
+- LinkedIn: https://www.linkedin.com/in/shahidul91325/
+
+---
+
+<p align="center">
+  Built with ❤️ using Next.js, TypeScript, and MongoDB.
+</p>

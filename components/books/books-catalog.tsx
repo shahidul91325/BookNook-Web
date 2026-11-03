@@ -157,7 +157,7 @@ export function BooksCatalog() {
       }
 
       // Availability filter
-      if (availableParam === "available" && (book.quantity === undefined || book.quantity <= 0)) {
+      if (availableParam === "available" && (book.availableCopies ?? 0) <= 0) {
         return false;
       }
 
@@ -176,7 +176,9 @@ export function BooksCatalog() {
       case "title-desc":
         return list.sort((a, b) => b.title.localeCompare(a.title));
       case "quantity-desc":
-        return list.sort((a, b) => (b.quantity || 0) - (a.quantity || 0));
+        return list.sort(
+          (a, b) => (b.availableCopies ?? 0) - (a.availableCopies ?? 0)
+        );
       case "newest":
       default:
         return list;
