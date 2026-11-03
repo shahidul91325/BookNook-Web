@@ -1,7 +1,26 @@
 /**
  * Centralized API client for BookNook frontend.
  * Communicates with the Express backend service.
+ *
+ * Authorization contract:
+ *   * Protected requests carry `Authorization: Bearer <jwt>` where `<jwt>` is
+ *     the real JWT issued by Better Auth's `jwt()` plugin
+ *     (`lib/auth/client.ts`: `ACCESS_TOKEN_STORAGE_KEY`, `set-auth-jwt` header
+ *     or `GET /auth/token`).
+ *   * The raw Better Auth session token (`booknook_token`) is NEVER used as a
+ *     backend JWT: it belongs to the auth server only.
+ *   * Authorization decisions are never made from frontend-supplied user IDs or
+ *     roles; the backend enforces them from the validated JWT subject.
  */
+
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  BOOKNOOK_AUTH_REQUIRED,
+  clearStoredAuthTokens,
+  dispatchAuthRequired,
+  getStoredAccessToken,
+  refreshAccessToken,
+} from "@/lib/auth/client";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -22,47 +41,15 @@ export function getApiBaseUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-/** Storage keys that may hold the session token, checked in preference order. */
-export const AUTH_TOKEN_STORAGE_KEYS: readonly string[] = [
-  "booknook_token",
-  "better-auth.session_token",
-  "better-auth_session_token",
-  "token",
-  "auth_token",
-];
+/** Clears every locally stored auth token (used on logout and 401). */
+export { clearStoredAuthTokens };
 
-/** Clears every locally stored session token (used on logout and 401). */
-export function clearStoredAuthTokens(): void {
-  if (typeof window === "undefined") return;
-  for (const key of AUTH_TOKEN_STORAGE_KEYS) {
-    try {
-      localStorage.removeItem(key);
-    } catch {
-      // Storage unavailable — nothing to clear.
-    }
-  }
-}
+/** Re-export the access-token storage key for consumers that need it. */
+export { ACCESS_TOKEN_STORAGE_KEY };
 
-/** Extract stored session token from localStorage.
- *
- * Note: the httpOnly `better-auth.session_token` cookie cannot be read
- * from `document.cookie` by design; authentication relies on the cookie
- * riding along automatically (`credentials: "include"`) or on the
- * bearer token persisted under `booknook_token`.
- */
+/** Extract stored JWT (access token) from localStorage. */
 export function getStoredAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    for (const key of AUTH_TOKEN_STORAGE_KEYS) {
-      const value = localStorage.getItem(key);
-      if (value && value.trim() && value !== "undefined" && value !== "null") {
-        return value;
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  return getStoredAccessToken();
 }
 
 /** Defensively read response JSON */
@@ -134,6 +121,8 @@ export async function apiRequest<T>(
     headers.set("Content-Type", "application/json");
   }
 
+  // Attach the Better Auth JWT as a Bearer token. No token → no Authorization
+  // header (public endpoints stay unauthenticated).
   const token = getStoredAuthToken();
   const isBearerRequest = Boolean(token);
   if (isBearerRequest && !headers.has("Authorization")) {
@@ -141,12 +130,14 @@ export async function apiRequest<T>(
   }
 
   let response: Response;
+  let body: unknown = null;
   try {
     response = await fetch(url, {
       ...init,
       headers,
       credentials: init?.credentials || "include",
     });
+    body = await readJsonBody(response);
   } catch (error) {
     const message =
       error instanceof Error && error.message.includes("fetch")
@@ -155,16 +146,37 @@ export async function apiRequest<T>(
     throw new ApiError(message, 0);
   }
 
-  const body = await readJsonBody(response);
-
   if (!response.ok) {
-    // A rejected/stale bearer token is no longer trusted: clear it so the
-    // next request either re-authenticates via the httpOnly cookie or
-    // surfaces a clean sign-in requirement instead of repeating with a dead
-    // token.
+    // A rejected or stale JWT is no longer trusted. Clear it and try to
+    // obtain a fresh JWT from Better Auth's `jwt()` plugin while the httpOnly
+    // session is still valid, then retry the request exactly once.
     if (response.status === 401 && isBearerRequest) {
       clearStoredAuthTokens();
+      const refreshedToken = await refreshAccessToken();
+      if (refreshedToken) {
+        const retryHeaders = new Headers(init?.headers);
+        if (init?.body && !retryHeaders.has("Content-Type")) {
+          retryHeaders.set("Content-Type", "application/json");
+        }
+        retryHeaders.set("Authorization", `Bearer ${refreshedToken}`);
+        try {
+          response = await fetch(url, {
+            ...init,
+            headers: retryHeaders,
+            credentials: "include",
+          });
+          body = await readJsonBody(response);
+          if (response.ok) return unwrapData<T>(body);
+        } catch {
+          // Fall through to error handling with the last observed response.
+        }
+      }
+      // No refreshable session: the user must sign in again.
+      dispatchAuthRequired(401);
     }
+
+    // 403 means the session is valid but the action is not permitted; surface
+    // it to the caller without clearing tokens or redirecting.
     const errorMessage = extractErrorMessage(
       body,
       `Request failed with status ${response.status}`
