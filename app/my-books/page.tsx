@@ -4,7 +4,7 @@ import { MyBooksView } from "@/components/books/my-books-view";
 import { TablePageSkeleton } from "@/components/books/book-table-skeleton";
 
 export const metadata: Metadata = {
-  title: "My Added Books | BookNook",
+  title: "BookNook | My Books",
   description:
     "View and manage all the books you have contributed to the BookNook library collection.",
 };

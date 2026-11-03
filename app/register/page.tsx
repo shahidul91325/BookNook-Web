@@ -5,7 +5,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 import { AuthFormSkeleton } from "@/components/auth/auth-skeleton";
 
 export const metadata: Metadata = {
-  title: "Create an Account | BookNook",
+  title: "BookNook | Register",
   description:
     "Create a free BookNook account to borrow books, track reading loans, and share your personal library collection.",
 };

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AddBookForm, AddBookFormSkeleton } from "@/components/books/add-book-form";
 
 export const metadata: Metadata = {
-  title: "Add a New Book | BookNook",
+  title: "BookNook | Add Book",
   description:
     "Contribute and publish a new book to the BookNook community library collection.",
 };

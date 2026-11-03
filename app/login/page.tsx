@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import { AuthFormSkeleton } from "@/components/auth/auth-skeleton";
 
 export const metadata: Metadata = {
-  title: "Sign In | BookNook",
+  title: "BookNook | Login",
   description:
     "Sign in to your BookNook account to manage your library loans, borrow books, and share recommendations.",
 };

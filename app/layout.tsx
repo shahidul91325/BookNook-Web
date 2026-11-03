@@ -18,8 +18,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BookNook | Discover, Borrow & Manage Books',
-  description: 'A small library. A big world of stories. Discover, borrow and manage your favorite books easily.',
+  title: {
+    default: "BookNook | Discover, Borrow & Manage Books",
+    template: "BookNook | %s",
+  },
+  description: "A small library. A big world of stories. Discover, borrow and manage your favorite books easily.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -65,7 +65,7 @@ export function useAuth() {
   // Handle 401 responses from protected backend APIs: clear dead tokens and
   // require sign in (unless already on a sign-in page).
   React.useEffect(() => {
-    function handleAuthRequired(event: Event) {
+    function handleAuthRequired() {
       const currentPath = window.location.pathname;
       if (
         currentPath === "/login" ||

@@ -3,10 +3,15 @@ import { getSessionCookie } from "better-auth/cookies";
 
 /**
  * Checks whether the incoming path requires authentication.
- * Protects /add-book, /my-books, /my-borrows, and Book Details (/books/:id).
+ * Protects:
+ * - /add-book
+ * - /books/add
+ * - /my-books
+ * - /my-borrows
+ * - /profile
+ * - Book Details (/books/:id, excluding the public catalog /books)
  */
 function isProtectedPath(pathname: string): boolean {
-  // Add Book, My Books, and My Borrows
   if (
     pathname === "/add-book" ||
     pathname.startsWith("/add-book/") ||
@@ -15,7 +20,9 @@ function isProtectedPath(pathname: string): boolean {
     pathname === "/my-books" ||
     pathname.startsWith("/my-books/") ||
     pathname === "/my-borrows" ||
-    pathname.startsWith("/my-borrows/")
+    pathname.startsWith("/my-borrows/") ||
+    pathname === "/profile" ||
+    pathname.startsWith("/profile/")
   ) {
     return true;
   }
@@ -34,6 +41,10 @@ function isProtectedPath(pathname: string): boolean {
 
 /**
  * Checks whether an active Better Auth session exists in request cookies.
+ *
+ * Verifies that the cookie value is present, non-empty, and if signed with
+ * HMAC-SHA256 (`token.signature`), ensures the signature is not obviously
+ * malformed.
  */
 function hasSessionCookie(request: NextRequest): boolean {
   try {
@@ -71,6 +82,20 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Prevent authenticated users from visiting login or register
+  if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
+    const redirectParam = request.nextUrl.searchParams.get("redirect");
+    const targetUrl =
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      !redirectParam.startsWith("//") &&
+      redirectParam !== "/login" &&
+      redirectParam !== "/register"
+        ? redirectParam
+        : "/";
+    return NextResponse.redirect(new URL(targetUrl, request.url));
+  }
+
   return NextResponse.next();
 }
 
@@ -85,5 +110,10 @@ export const config = {
     "/my-books",
     "/my-borrows/:path*",
     "/my-borrows",
+    "/profile/:path*",
+    "/profile",
+    "/login",
+    "/register",
   ],
 };
+

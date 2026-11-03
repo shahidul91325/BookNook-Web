@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { jwtClient } from "better-auth/client/plugins";
 
 /**
  * Token storage keys.
@@ -13,8 +14,8 @@ import { createAuthClient } from "better-auth/react";
  *    must NEVER be sent to the Express backend as `Authorization: Bearer`.
  *
  * 2. Access/JWT token (`ACCESS_TOKEN_STORAGE_KEY`, "booknook_access_token"):
- *    A real JWT issued by Better Auth's `jwt()` plugin through the
- *    `set-auth-jwt` response header or `GET /auth/token` (requires an active
+ *    A real HS256 JWT issued by Better Auth's `jwt()` plugin through the
+ *    `set-auth-jwt` response header or `GET /api/auth/token` (requires an active
  *    session). This is the token attached to protected Express backend APIs
  *    as `Authorization: Bearer <jwt>`.
  */
@@ -71,8 +72,7 @@ function persistTokenFromResponse(
       localStorage.setItem(storageKey, token.trim());
     }
   } catch {
-    // Storage unavailable (e.g. private mode with quota exceeded):
-    // authentication still works through the httpOnly session cookie.
+    // Storage unavailable (e.g. private mode with quota exceeded)
   }
 }
 
@@ -81,6 +81,7 @@ const isAbsolute = Boolean(authUrl && /^https?:\/\//i.test(authUrl));
 
 export const authClient = createAuthClient({
   ...(isAbsolute && authUrl ? { baseURL: authUrl } : {}),
+  plugins: [jwtClient()],
   fetchOptions: {
     onResponse: (context) => {
       const headers = context.response?.headers;
@@ -119,25 +120,66 @@ export function clearStoredAuthTokens(): void {
 }
 
 /**
- * Obtain a fresh JWT from Better Auth's `jwt()` plugin (`GET /auth/token`).
+ * Concurrency guard: deduplicate simultaneous in-flight token refresh promises
+ * to avoid parallel redundant requests.
+ */
+let inFlightTokenPromise: Promise<string | null> | null = null;
+
+/**
+ * Obtain a fresh JWT from Better Auth's `jwt()` plugin (`GET /api/auth/token`).
  * Requires an active session; the httpOnly session cookie is sent
  * automatically (`credentials: "include"`). Used to refresh a stale access
  * token without asking the user to sign in again.
  */
 export async function refreshAccessToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
-  try {
-    const res = await authClient.$fetch<{ token: string }>("/token", {
-      method: "GET",
-    });
-    if (res.error) return null;
-    const token = res.data?.token ?? null;
-    if (token && token.trim()) {
-      localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token.trim());
-      return token.trim();
-    }
-    return null;
-  } catch {
-    return null;
+
+  if (inFlightTokenPromise) {
+    return inFlightTokenPromise;
   }
+
+  inFlightTokenPromise = (async () => {
+    try {
+      // 1. Try official client method if attached dynamically by jwtClient plugin
+      const dynamicClient = authClient as unknown as {
+        getToken?: () => Promise<{ data?: { token?: string } } | undefined>;
+      };
+      if (typeof dynamicClient.getToken === "function") {
+        try {
+          const res = await dynamicClient.getToken();
+          if (
+            res &&
+            "data" in res &&
+            res.data &&
+            typeof res.data.token === "string" &&
+            res.data.token.trim()
+          ) {
+            const token = res.data.token.trim();
+            localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+            return token;
+          }
+        } catch {
+          // Fall through to direct $fetch
+        }
+      }
+
+      // 2. Direct endpoint call to /token via authClient.$fetch
+      const res = await authClient.$fetch<{ token: string }>("/token", {
+        method: "GET",
+      });
+      if (!res.error && res.data?.token && res.data.token.trim()) {
+        const token = res.data.token.trim();
+        localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+        return token;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      inFlightTokenPromise = null;
+    }
+  })();
+
+  return inFlightTokenPromise;
 }
+

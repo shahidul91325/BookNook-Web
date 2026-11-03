@@ -15,7 +15,6 @@
 
 import {
   ACCESS_TOKEN_STORAGE_KEY,
-  BOOKNOOK_AUTH_REQUIRED,
   clearStoredAuthTokens,
   dispatchAuthRequired,
   getStoredAccessToken,
@@ -121,9 +120,14 @@ export async function apiRequest<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  // Attach the Better Auth JWT as a Bearer token. No token → no Authorization
-  // header (public endpoints stay unauthenticated).
-  const token = getStoredAuthToken();
+  // Attach the Better Auth JWT as a Bearer token.
+  // If there's an active session but no stored token yet (e.g. initial page load
+  // or after a refresh), try refreshing/retrieving the token first.
+  let token = getStoredAuthToken();
+  if (!token && typeof window !== "undefined") {
+    token = await refreshAccessToken();
+  }
+
   const isBearerRequest = Boolean(token);
   if (isBearerRequest && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
