@@ -67,33 +67,7 @@ function persistTokenFromResponse(
   }
 }
 
-/**
- * Base URL for the remote authentication server.
- * Uses the frontend-origin auth URL so cookies stay visible to proxy.ts.
- */
-export function getAuthBaseUrl(): string {
-  const customAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL;
-  if (customAuthUrl && customAuthUrl.trim()) {
-    const configuredUrl = customAuthUrl.trim().replace(/\/+$/, "");
-    if (configuredUrl.startsWith("/")) {
-      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")
-        .replace(/\/+$/, "");
-      return `${appUrl}${configuredUrl}`;
-    }
-    return configuredUrl;
-  }
-  // Auth calls go through a same-origin Next.js rewrite to the Express auth
-  // server. This lets the browser retain the server's httpOnly session cookie
-  // on the frontend origin, where proxy.ts can perform its optimistic check.
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")
-    .replace(/\/+$/, "");
-  return `${appUrl}/api/auth`;
-}
-
-const authBaseUrl = getAuthBaseUrl();
-
 export const authClient = createAuthClient({
-  baseURL: authBaseUrl,
   plugins: [jwtClient()],
   fetchOptions: {
     credentials: "include",

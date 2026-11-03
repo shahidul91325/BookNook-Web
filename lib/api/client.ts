@@ -32,24 +32,27 @@ export class ApiError extends Error {
   }
 }
 
-/** Get base API URL from environment variable or fallback */
+/** Express API origin shared by REST calls and the /api/auth rewrite. */
 export function getApiBaseUrl(): string {
   const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-  const url = configuredUrl ||
-    (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "");
-  if (!url) {
+  if (!configuredUrl) {
     throw new Error("NEXT_PUBLIC_API_URL must point to the Express API origin.");
   }
   let parsedUrl: URL;
   try {
-    parsedUrl = new URL(url);
+    parsedUrl = new URL(configuredUrl);
   } catch {
     throw new Error("NEXT_PUBLIC_API_URL must be an absolute http(s) URL.");
   }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error("NEXT_PUBLIC_API_URL must use http or https.");
+  if (
+    !["http:", "https:"].includes(parsedUrl.protocol) ||
+    parsedUrl.pathname !== "/" ||
+    parsedUrl.search ||
+    parsedUrl.hash
+  ) {
+    throw new Error("NEXT_PUBLIC_API_URL must be an http(s) origin without a path, query, or fragment.");
   }
-  return parsedUrl.toString().replace(/\/+$/, "");
+  return parsedUrl.origin;
 }
 
 /** Clears every locally stored auth token (used on logout and 401). */

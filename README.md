@@ -7,15 +7,8 @@ BookNook is a community library application for sharing, borrowing, and managing
 Create a `.env.local` (development) or set these in your production host (e.g. Vercel project settings):
 
 ```env
-# Express REST API (protected requests use a Better Auth JWT)
+# Express API origin used for REST calls and the same-origin /api/auth rewrite.
 NEXT_PUBLIC_API_URL=http://localhost:5000
-
-# Auth requests stay same-origin so the remote Express server's httpOnly
-# session cookie is available to the Next.js proxy. next.config.ts rewrites
-# /api/auth/* to this server-side destination.
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_AUTH_URL=/api/auth
-AUTH_SERVER_URL=http://localhost:5000/api/auth
 
 # The Better Auth secret, Google OAuth credentials, and MongoDB URI/database
 # belong in BookNook-Server/.env. Do not put server secrets in this frontend.
@@ -58,11 +51,11 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ## Auth and API routing
 
 The Express server is the only Better Auth server. The browser uses
-`/api/auth/*` on the frontend origin; the Next.js rewrite forwards those
-requests to `AUTH_SERVER_URL`, keeping the server-issued session cookie on the
-frontend host for refreshes, navigation, and the optimistic route proxy. Set
-`AUTH_SERVER_URL` to the Express Better Auth mount and `NEXT_PUBLIC_API_URL` to
-the Express API origin for production.
+the standard `/api/auth/*` path. Better Auth's client uses its default auth
+base path, and one Next.js rewrite forwards that path to the Express origin in
+`NEXT_PUBLIC_API_URL`. The session cookie stays on the frontend host for
+refreshes, navigation, and the route proxy. REST calls use the same configured
+Express origin directly.
 
 After sign-in, the frontend obtains a JWT through Better Auth's JWT plugin
 endpoint and sends it as `Authorization: Bearer <token>` to protected REST
@@ -92,32 +85,27 @@ Set these for Production and Preview, with values matching that environment:
 | Variable | Value |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Express API origin, such as `https://<backend-domain>` |
-| `NEXT_PUBLIC_APP_URL` | Stable frontend origin, such as `https://<frontend-domain>` |
-| `NEXT_PUBLIC_AUTH_URL` | `/api/auth` |
-| `AUTH_SERVER_URL` | Express auth mount, such as `https://<backend-domain>/api/auth` |
 | `IMGBB_API_KEY` | Optional server-only key, needed only for cover uploads |
 
-`NEXT_PUBLIC_*` values are embedded during `next build`, so configure them
-before deploying. Keep the Better Auth secret, Google OAuth credentials, and
-MongoDB URI out of the frontend project.
+`NEXT_PUBLIC_API_URL` is embedded during `next build`, so configure it before
+deploying. Keep the Better Auth secret, Google OAuth credentials, and MongoDB
+URI out of the frontend project.
 
 ### Backend project variables
 
 Required in Production and Preview: `MONGODB_URI`, `MONGODB_DB_NAME`,
-`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `CORS_ORIGIN`. Populate secrets
+`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `JWT_JWKS_URL`. Populate secrets
 directly in Vercel, never in committed files.
 
 - `BETTER_AUTH_URL` is the matching frontend origin plus `/api/auth`.
-- `CORS_ORIGIN` is the exact frontend origin or comma-separated exact origins;
-  do not include paths or `*`.
-- `JWT_JWKS_URL` is recommended as the direct backend URL ending in
-  `/api/auth/jwks`; if omitted, the verifier uses the frontend auth rewrite.
+- CORS and Better Auth trusted origins are derived from `BETTER_AUTH_URL`.
+- `JWT_JWKS_URL` is the direct Express URL ending in `/api/auth/jwks`.
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are required only for Google login.
-- `JWT_ISSUER` and `JWT_AUDIENCE` are optional; defaults match `BETTER_AUTH_URL`.
+- JWT issuer and audience both use `BETTER_AUTH_URL`.
 - `PORT` is for local development; Vercel supplies its own listener.
 
 Use a stable frontend Preview domain and configure the backend Preview
-`CORS_ORIGIN` and `BETTER_AUTH_URL` to match it. Register that domain's
+`BETTER_AUTH_URL` to match it. Register that domain's
 `/api/auth/callback/google` URL with Google. A changing generated preview host
 requires corresponding backend Preview and Google OAuth settings. Production
 must use the production frontend domain.

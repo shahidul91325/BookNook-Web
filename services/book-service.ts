@@ -74,7 +74,7 @@ export const bookService = {
    */
   async updateBook(id: string, data: UpdateBookInput): Promise<Book> {
     return apiRequest<Book>(`/api/books/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(data),
     });
   },

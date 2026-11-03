@@ -30,8 +30,8 @@ export const borrowService = {
     borrowId: string,
   ): Promise<{ success: boolean; message?: string }> {
     return apiRequest<{ success: boolean; message?: string }>(
-      `/api/borrows/${borrowId}/return`,
-      { method: "PUT" }
+      `/api/borrows/${borrowId}`,
+      { method: "DELETE" }
     );
   },
 };

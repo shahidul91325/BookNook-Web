@@ -2,36 +2,31 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    const configuredAuthServerUrl = process.env.AUTH_SERVER_URL?.trim();
-    const authServerUrl = configuredAuthServerUrl
-      ? configuredAuthServerUrl.replace(/\/+$/, "")
-      : process.env.NODE_ENV === "development"
-        ? "http://localhost:5000/api/auth"
-        : undefined;
-
-    if (!authServerUrl) {
-      throw new Error(
-        "AUTH_SERVER_URL is required outside local development; set it to the Express Better Auth URL ending in /api/auth."
-      );
+    const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (!configuredApiUrl) {
+      throw new Error("NEXT_PUBLIC_API_URL is required and must point to the Express API origin.");
     }
 
-    let parsedAuthServerUrl: URL;
+    let apiOrigin: string;
     try {
-      parsedAuthServerUrl = new URL(authServerUrl);
+      const parsedApiUrl = new URL(configuredApiUrl);
+      if (
+        !["http:", "https:"].includes(parsedApiUrl.protocol) ||
+        parsedApiUrl.pathname !== "/" ||
+        parsedApiUrl.search ||
+        parsedApiUrl.hash
+      ) {
+        throw new Error();
+      }
+      apiOrigin = parsedApiUrl.origin;
     } catch {
-      throw new Error("AUTH_SERVER_URL must be an absolute http(s) URL.");
-    }
-    if (
-      !["http:", "https:"].includes(parsedAuthServerUrl.protocol) ||
-      !parsedAuthServerUrl.pathname.replace(/\/+$/, "").endsWith("/api/auth")
-    ) {
-      throw new Error("AUTH_SERVER_URL must be an http(s) URL ending in /api/auth.");
+      throw new Error("NEXT_PUBLIC_API_URL must be an http(s) origin without a path, query, or fragment.");
     }
 
     return [
       {
         source: "/api/auth/:path*",
-        destination: `${parsedAuthServerUrl.toString().replace(/\/+$/, "")}/:path*`,
+        destination: `${apiOrigin}/api/auth/:path*`,
       },
     ];
   },
@@ -40,10 +35,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
       },
     ],
   },
