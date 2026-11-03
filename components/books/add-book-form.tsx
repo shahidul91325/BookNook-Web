@@ -218,8 +218,6 @@ export function AddBookForm() {
         image: image.trim(),
         quantity: parseInt(quantity, 10) || 1,
         description: description.trim(),
-        userName: user.name || 'BookNook Member',
-        userEmail: user.email,
       };
 
       await bookService.createBook(payload);

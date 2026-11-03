@@ -7,25 +7,17 @@ BookNook is a community library application for sharing, borrowing, and managing
 Create a `.env.local` (development) or set these in your production host (e.g. Vercel project settings):
 
 ```env
-# Express Backend REST API base URL
+# Express REST API (protected requests use a Better Auth JWT)
 NEXT_PUBLIC_API_URL=http://localhost:5000
 
-# Next.js Application URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Auth requests stay same-origin so the remote Express server's httpOnly
+# session cookie is available to the Next.js proxy. next.config.ts rewrites
+# /api/auth/* to this server-side destination.
+NEXT_PUBLIC_AUTH_URL=http://localhost:3000/api/auth
+AUTH_SERVER_URL=http://localhost:5000/api/auth
 
-# Better Auth Secret (generate a secure 32+ character random secret)
-BETTER_AUTH_SECRET=your_32_character_random_secret_here
-
-# Better Auth Base URL
-BETTER_AUTH_URL=http://localhost:3000
-
-# MongoDB Database Connection
-MONGODB_URI=mongodb://localhost:27017/booknook
-MONGODB_DB_NAME=booknook
-
-# Google OAuth Credentials
-GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+# The Better Auth secret, Google OAuth credentials, and MongoDB URI/database
+# belong in BookNook-Server/.env. Do not put server secrets in this frontend.
 
 # Image Storage (Required for book cover uploads)
 # Images are uploaded to ImgBB. The key is read server-side only and is never
@@ -61,6 +53,20 @@ npm run lint
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## Auth and API routing
+
+The Express server is the only Better Auth server. The browser uses
+`/api/auth/*` on the frontend origin; the Next.js rewrite forwards those
+requests to `AUTH_SERVER_URL`, keeping the server-issued session cookie on the
+frontend host for refreshes, navigation, and the optimistic route proxy. Set
+`AUTH_SERVER_URL` to the Express Better Auth mount and `NEXT_PUBLIC_API_URL` to
+the Express API origin for production.
+
+After sign-in, the frontend obtains a JWT through Better Auth's JWT plugin
+endpoint and sends it as `Authorization: Bearer <token>` to protected REST
+routes. Express verifies the JWT and derives the user identity from verified
+claims. The browser never supplies an owner ID as authority.
 
 ## Image Upload Flow
 

@@ -29,9 +29,5 @@ export interface BorrowRecord {
 
 export interface CreateBorrowInput {
   bookId: string;
-  bookTitle?: string;
-  bookImage?: string;
-  userName: string;
-  userEmail: string;
   returnDate: string;
 }

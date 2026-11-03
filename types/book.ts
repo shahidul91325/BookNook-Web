@@ -13,6 +13,8 @@ export interface Book {
   rating?: number;
   reviewsCount?: number;
   description: string;
+  /** Stable owner id supplied by the backend from verified auth. */
+  addedBy?: string;
   userName?: string;
   userEmail?: string;
   createdAt?: string;
@@ -35,8 +37,6 @@ export interface CreateBookInput {
   image: string;
   quantity: number;
   description: string;
-  userName: string;
-  userEmail: string;
   rating?: number;
 }
 

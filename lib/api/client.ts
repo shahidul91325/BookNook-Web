@@ -18,6 +18,7 @@ import {
   clearStoredAuthTokens,
   dispatchAuthRequired,
   getStoredAccessToken,
+  hasActiveAuthSession,
   refreshAccessToken,
 } from "@/lib/auth/client";
 
@@ -154,10 +155,12 @@ export async function apiRequest<T>(
     // A rejected or stale JWT is no longer trusted. Clear it and try to
     // obtain a fresh JWT from Better Auth's `jwt()` plugin while the httpOnly
     // session is still valid, then retry the request exactly once.
-    if (response.status === 401 && isBearerRequest) {
-      clearStoredAuthTokens();
-      const refreshedToken = await refreshAccessToken();
-      if (refreshedToken) {
+    if (response.status === 401) {
+      if (isBearerRequest) clearStoredAuthTokens();
+      const refreshedToken = isBearerRequest
+        ? await refreshAccessToken()
+        : token;
+      if (refreshedToken && isBearerRequest) {
         const retryHeaders = new Headers(init?.headers);
         if (init?.body && !retryHeaders.has("Content-Type")) {
           retryHeaders.set("Content-Type", "application/json");
@@ -175,8 +178,10 @@ export async function apiRequest<T>(
           // Fall through to error handling with the last observed response.
         }
       }
-      // No refreshable session: the user must sign in again.
-      dispatchAuthRequired(401);
+      // Only redirect when the auth server confirms there is no active
+      // cookie-backed session. A JWT/API configuration error alone must not
+      // sign the user out of an otherwise valid Better Auth session.
+      if (!(await hasActiveAuthSession())) dispatchAuthRequired(401);
     }
 
     // 403 means the session is valid but the action is not permitted; surface

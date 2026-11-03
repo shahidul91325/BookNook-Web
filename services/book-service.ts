@@ -1,4 +1,4 @@
-import { apiRequest, ApiError } from "@/lib/api/client";
+import { apiRequest } from "@/lib/api/client";
 import type {
   Book,
   BookFilterParams,
@@ -53,96 +53,38 @@ export const bookService = {
 
   /**
    * Fetch books belonging to the currently logged in user.
-   * Follows backend session authentication without relying on client IDs.
+   * The backend filters by the verified JWT subject.
    */
-  async getMyBooks(userEmail?: string): Promise<Book[]> {
-    try {
-      return await apiRequest<Book[]>("/api/my-books");
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 404) {
-        try {
-          return await apiRequest<Book[]>("/api/books/my");
-        } catch (err2: unknown) {
-          if (err2 instanceof ApiError && err2.status === 404) {
-            try {
-              return await apiRequest<Book[]>("/api/books/user");
-            } catch (err3: unknown) {
-              if (err3 instanceof ApiError && err3.status === 404 && userEmail) {
-                return await apiRequest<Book[]>(`/api/books/user/${encodeURIComponent(userEmail)}`);
-              }
-              throw err3;
-            }
-          }
-          throw err2;
-        }
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Fetch books added by a specific user.
-   */
-  async getBooksByUser(email: string): Promise<Book[]> {
-    const encodedEmail = encodeURIComponent(email);
-    return apiRequest<Book[]>(`/api/books/user/${encodedEmail}`);
+  async getMyBooks(): Promise<Book[]> {
+    return apiRequest<Book[]>("/api/my-books");
   },
 
   /**
    * Add a new book to the library.
    */
   async createBook(data: CreateBookInput): Promise<Book> {
-    try {
-      return await apiRequest<Book>("/api/books", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await apiRequest<Book>("/api/book", {
-          method: "POST",
-          body: JSON.stringify(data),
-        });
-      }
-      throw err;
-    }
+    return apiRequest<Book>("/api/books", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
    * Update an existing book.
    */
   async updateBook(id: string, data: UpdateBookInput): Promise<Book> {
-    try {
-      return await apiRequest<Book>(`/api/books/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await apiRequest<Book>(`/api/book/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(data),
-        });
-      }
-      throw err;
-    }
+    return apiRequest<Book>(`/api/books/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
    * Delete a book by its identifier.
    */
   async deleteBook(id: string): Promise<{ success: boolean; message?: string }> {
-    try {
-      return await apiRequest<{ success: boolean; message?: string }>(`/api/books/${id}`, {
-        method: "DELETE",
-      });
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await apiRequest<{ success: boolean; message?: string }>(`/api/book/${id}`, {
-          method: "DELETE",
-        });
-      }
-      throw err;
-    }
+    return apiRequest<{ success: boolean; message?: string }>(`/api/books/${id}`, {
+      method: "DELETE",
+    });
   },
 };

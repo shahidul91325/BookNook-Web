@@ -70,7 +70,7 @@ export function MyBooksView() {
 
     async function loadMyBooks() {
       try {
-        const data = await bookService.getMyBooks(user?.email);
+        const data = await bookService.getMyBooks();
         if (!isCancelled) {
           setBooks(Array.isArray(data) ? data : []);
           setErrorMessage(null);

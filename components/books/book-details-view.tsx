@@ -167,10 +167,6 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
     try {
       await borrowService.borrowBook({
         bookId: book.id || book._id || bookId,
-        bookTitle: book.title,
-        bookImage: book.image,
-        userName: user.name || "BookNook Reader",
-        userEmail: user.email,
         returnDate,
       });
 
@@ -246,11 +242,7 @@ export function BookDetailsView({ bookId }: BookDetailsViewProps) {
   const availableCopies = book.availableCopies ?? book.quantity ?? 0;
   const isAvailable = availableCopies > 0;
   const copiesCount = availableCopies;
-  const isOwner = Boolean(
-    user?.email &&
-      book?.userEmail &&
-      user.email.toLowerCase() === book.userEmail.toLowerCase()
-  );
+  const isOwner = Boolean(user?.id && book?.addedBy === user.id);
 
   return (
     <div className="py-8 sm:py-12 bg-background min-h-screen transition-colors">

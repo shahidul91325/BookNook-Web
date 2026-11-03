@@ -9,7 +9,6 @@ import { getSessionCookie } from "better-auth/cookies";
  * - /my-books
  * - /my-borrows
  * - /profile
- * - Book Details (/books/:id, excluding the public catalog /books)
  */
 function isProtectedPath(pathname: string): boolean {
   if (
@@ -27,24 +26,12 @@ function isProtectedPath(pathname: string): boolean {
     return true;
   }
 
-  // Book Details: /books/:id (excluding public /books catalog)
-  if (
-    pathname.startsWith("/books/") &&
-    pathname !== "/books/" &&
-    pathname !== "/books/add"
-  ) {
-    return true;
-  }
-
   return false;
 }
 
 /**
- * Checks whether an active Better Auth session exists in request cookies.
- *
- * Verifies that the cookie value is present, non-empty, and if signed with
- * HMAC-SHA256 (`token.signature`), ensures the signature is not obviously
- * malformed.
+ * Performs an optimistic cookie-presence check. The Express Better Auth
+ * server validates the actual session, and protected API calls validate JWTs.
  */
 function hasSessionCookie(request: NextRequest): boolean {
   try {
@@ -75,7 +62,7 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isAuthenticated = hasSessionCookie(request);
 
-  // Protect restricted routes: redirect unauthenticated users to /login with return destination
+  // Redirect when no session cookie is present, preserving the destination.
   if (!isAuthenticated && isProtectedPath(pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);

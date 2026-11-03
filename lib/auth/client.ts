@@ -6,20 +6,12 @@ import { jwtClient } from "better-auth/client/plugins";
  *
  * Two different credentials are involved:
  *
- * 1. Session token (`SESSION_TOKEN_STORAGE_KEY`, "booknook_token"):
- *    The raw Better Auth session token exposed by the `bearer()` plugin
- *    through the `set-auth-token` response header. It is the bearer-token
- *    alternative for the AUTH server (`/api/auth`) and is also kept
- *    httpOnly in the `better-auth.session_token` cookie. It is NOT a JWT and
- *    must NEVER be sent to the Express backend as `Authorization: Bearer`.
- *
- * 2. Access/JWT token (`ACCESS_TOKEN_STORAGE_KEY`, "booknook_access_token"):
- *    A real HS256 JWT issued by Better Auth's `jwt()` plugin through the
+ * Access/JWT token (`ACCESS_TOKEN_STORAGE_KEY`, "booknook_access_token"):
+ *    A real JWT issued by Better Auth's `jwt()` plugin through the
  *    `set-auth-jwt` response header or `GET /api/auth/token` (requires an active
  *    session). This is the token attached to protected Express backend APIs
  *    as `Authorization: Bearer <jwt>`.
  */
-export const SESSION_TOKEN_STORAGE_KEY = "booknook_token";
 export const ACCESS_TOKEN_STORAGE_KEY = "booknook_access_token";
 
 /** Legacy localStorage keys that may hold stale session tokens. */
@@ -32,7 +24,6 @@ export const LEGACY_TOKEN_STORAGE_KEYS: readonly string[] = [
 
 /** Every locally stored auth token key, cleared together on logout / 401. */
 export const ALL_TOKEN_STORAGE_KEYS: readonly string[] = [
-  SESSION_TOKEN_STORAGE_KEY,
   ACCESS_TOKEN_STORAGE_KEY,
   ...LEGACY_TOKEN_STORAGE_KEYS,
 ];
@@ -78,20 +69,25 @@ function persistTokenFromResponse(
 
 /**
  * Base URL for the remote authentication server.
- * Uses NEXT_PUBLIC_AUTH_URL if set, or NEXT_PUBLIC_API_URL + "/api/auth".
+ * Uses the frontend-origin auth URL so cookies stay visible to proxy.ts.
  */
 export function getAuthBaseUrl(): string {
   const customAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL;
   if (customAuthUrl && customAuthUrl.trim()) {
-    return customAuthUrl.trim().replace(/\/+$/, "");
+    const configuredUrl = customAuthUrl.trim().replace(/\/+$/, "");
+    if (configuredUrl.startsWith("/")) {
+      const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")
+        .replace(/\/+$/, "");
+      return `${appUrl}${configuredUrl}`;
+    }
+    return configuredUrl;
   }
-
-  const apiUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_URL ||
-    "http://localhost:5000";
-
-  return `${apiUrl.replace(/\/+$/, "")}/api/auth`;
+  // Auth calls go through a same-origin Next.js rewrite to the Express auth
+  // server. This lets the browser retain the server's httpOnly session cookie
+  // on the frontend origin, where proxy.ts can perform its optimistic check.
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")
+    .replace(/\/+$/, "");
+  return `${appUrl}/api/auth`;
 }
 
 const authBaseUrl = getAuthBaseUrl();
@@ -103,9 +99,7 @@ export const authClient = createAuthClient({
     credentials: "include",
     onResponse: (context) => {
       const headers = context.response?.headers;
-      // Session token for the auth server (never a backend JWT).
-      persistTokenFromResponse(SESSION_TOKEN_STORAGE_KEY, headers, "set-auth-token");
-      // Real JWT issued by the `jwt()` plugin — used as `Bearer` for backend APIs.
+      // Real JWT issued by the remote server's `jwt()` plugin.
       persistTokenFromResponse(ACCESS_TOKEN_STORAGE_KEY, headers, "set-auth-jwt");
     },
   },
@@ -137,6 +131,17 @@ export function clearStoredAuthTokens(): void {
   }
 }
 
+/** Ask the auth server whether its cookie-backed session is still active. */
+export async function hasActiveAuthSession(): Promise<boolean> {
+  try {
+    const result = await authClient.getSession();
+    return Boolean(result.data?.user);
+  } catch {
+    // A network/CORS failure is not evidence that a valid session expired.
+    return true;
+  }
+}
+
 /**
  * Concurrency guard: deduplicate simultaneous in-flight token refresh promises
  * to avoid parallel redundant requests.
@@ -146,8 +151,9 @@ let inFlightTokenPromise: Promise<string | null> | null = null;
 /**
  * Obtain a fresh JWT from Better Auth's `jwt()` plugin.
  *
- * Uses the official `authClient.token()` API provided by the `jwtClient` plugin
- * against the Express Better Auth server (`/api/auth/token`).
+ * Uses Better Auth's official JWT plugin endpoint (`GET /api/auth/token`)
+ * against the Express auth server. `jwtClient` exposes JWKS helpers, while
+ * `$fetch` is the typed client's endpoint API for `/token`.
  *
  * Requires an active session; the session cookie is sent automatically
  * (`credentials: "include"`).
@@ -161,52 +167,7 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   inFlightTokenPromise = (async () => {
     try {
-      // 1. Primary method: official Better Auth token() client API
-      const dynamicClient = authClient as unknown as {
-        token?: () => Promise<{ data?: { token?: string }; error?: unknown } | undefined>;
-        getToken?: () => Promise<{ data?: { token?: string }; error?: unknown } | undefined>;
-      };
-
-      if (typeof dynamicClient.token === "function") {
-        try {
-          const res = await dynamicClient.token();
-          if (
-            res &&
-            "data" in res &&
-            res.data &&
-            typeof res.data.token === "string" &&
-            res.data.token.trim()
-          ) {
-            const token = res.data.token.trim();
-            localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
-            return token;
-          }
-        } catch {
-          // Fall through to secondary check
-        }
-      }
-
-      // 2. Secondary method: getToken() if provided
-      if (typeof dynamicClient.getToken === "function") {
-        try {
-          const res = await dynamicClient.getToken();
-          if (
-            res &&
-            "data" in res &&
-            res.data &&
-            typeof res.data.token === "string" &&
-            res.data.token.trim()
-          ) {
-            const token = res.data.token.trim();
-            localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
-            return token;
-          }
-        } catch {
-          // Fall through to direct $fetch
-        }
-      }
-
-      // 3. Fallback: direct GET /token against the Express Better Auth server
+      // The JWT plugin's supported client operation is GET /token.
       const res = await authClient.$fetch<{ token: string }>("/token", {
         method: "GET",
       });

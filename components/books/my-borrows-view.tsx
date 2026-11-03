@@ -158,7 +158,7 @@ function getDueInfo(returnDateStr?: string, isReturned?: boolean) {
 export function MyBorrowsView() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // Login redirect that preserves the user's originally requested route.
   const loginRedirect = React.useMemo(
@@ -190,7 +190,7 @@ export function MyBorrowsView() {
 
     async function loadBorrows() {
       try {
-        const data = await borrowService.getUserBorrows(user?.email);
+        const data = await borrowService.getUserBorrows();
         if (!isCancelled) {
           setBorrows(Array.isArray(data) ? data : []);
           setErrorMessage(null);
@@ -217,14 +217,13 @@ export function MyBorrowsView() {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthenticated, user?.email, retryKey]);
+  }, [isAuthenticated, retryKey]);
 
   // Handle Return Book API submission
   const handleConfirmReturn = async () => {
     if (!selectedRecordForReturn) return;
 
     const borrowId = getRecordId(selectedRecordForReturn);
-    const bookId = getBookId(selectedRecordForReturn);
     const bookTitle = getBookTitle(selectedRecordForReturn);
 
     if (!borrowId) {
@@ -241,10 +240,7 @@ export function MyBorrowsView() {
     setReturningIds((prev) => ({ ...prev, [borrowId]: true }));
 
     try {
-      await borrowService.returnBook(borrowId, {
-        bookId: bookId || undefined,
-        userEmail: user?.email,
-      });
+      await borrowService.returnBook(borrowId);
 
       toast.success(`Successfully returned "${bookTitle}"!`);
 
