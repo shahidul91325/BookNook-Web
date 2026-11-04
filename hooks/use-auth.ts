@@ -40,6 +40,7 @@ export function useAuth() {
       } catch {
         // Sign out locally even if the server request fails.
       }
+      await session.refetch();
       if (typeof window !== "undefined") {
         clearStoredAuthTokens();
       }
@@ -47,7 +48,7 @@ export function useAuth() {
       router.push(redirectTo);
       router.refresh();
     },
-    [router]
+    [router, session.refetch]
   );
 
   // Obtain a fresh JWT whenever a session becomes available: after sign-in,
