@@ -78,7 +78,10 @@ export function AvatarUpload({
     setPreviewError(false);
 
     try {
-      const uploadedUrl = await uploadService.uploadBookCover(file);
+      const uploadedUrl = await uploadService.uploadBookCover(
+        file,
+        "registration-avatar"
+      );
       onChange(uploadedUrl);
       toast.success("Avatar image uploaded successfully!");
     } catch (err) {

@@ -13,9 +13,13 @@ export class UploadService {
    * Upload an image file for a book cover.
    * Sends multipart/form-data to /api/upload route handler.
    */
-  async uploadBookCover(file: File): Promise<string> {
+  async uploadBookCover(
+    file: File,
+    purpose?: "registration-avatar"
+  ): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);
+    if (purpose) formData.append("purpose", purpose);
 
     const response = await fetch("/api/upload", {
       method: "POST",

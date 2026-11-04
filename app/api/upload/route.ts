@@ -69,21 +69,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const authenticated = await verifySession(request);
-    if (authenticated === false) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required. Please sign in." },
-        { status: 401 }
-      );
-    }
-    if (authenticated === null) {
-      return NextResponse.json(
-        { success: false, error: "Authentication service is unavailable." },
-        { status: 503 }
-      );
+    const formData = await request.formData();
+    // Registration uploads happen before Better Auth has created a session.
+    // Keep every other use of this endpoint behind the existing session check.
+    const isRegistrationAvatar = formData.get("purpose") === "registration-avatar";
+    if (!isRegistrationAvatar) {
+      const authenticated = await verifySession(request);
+      if (authenticated === false) {
+        return NextResponse.json(
+          { success: false, error: "Authentication required. Please sign in." },
+          { status: 401 }
+        );
+      }
+      if (authenticated === null) {
+        return NextResponse.json(
+          { success: false, error: "Authentication service is unavailable." },
+          { status: 503 }
+        );
+      }
     }
 
-    const formData = await request.formData();
     const file = formData.get("file");
 
     if (!file || !(file instanceof Blob)) {
